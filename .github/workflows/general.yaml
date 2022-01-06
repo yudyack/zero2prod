@@ -12,6 +12,8 @@ name: Rust
 #     branches:
 #       - root-chapter-03-part1
 
+on: [push, pull_request]
+
 env:
   CARGO_TERM_COLOR: always
 
