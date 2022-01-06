@@ -1,11 +1,7 @@
 [package]
-name = "zero2prod"
+name = "zero2prod" # name of lib
 version = "0.1.0"
 edition = "2021"
-
-[term]
-color = 'always'
-verbose = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
@@ -13,7 +9,8 @@ path = "src/lib.rs"
 
 [[bin]]
 path = "src/main.rs"
-name = "zero2prod"
+name = "zero2prod" # this is the file name of the binary
+
 
 [dependencies]
 actix-web = "4.0.0-beta.16"
