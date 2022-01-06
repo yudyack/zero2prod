@@ -1,4 +1,3 @@
-
 use actix_web::dev::Server;
 use actix_web::web;
 use actix_web::App;
@@ -7,7 +6,6 @@ use std::net::TcpListener;
 
 use crate::routes::health_check;
 use crate::routes::subscribe;
-
 
 // we need to mark run as public
 // it is no longer a binary entrypoint, therefore we can mark it as async
