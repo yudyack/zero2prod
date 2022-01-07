@@ -1,3 +1,5 @@
+use sqlx::Connection;
+use sqlx::PgConnection;
 use std::net::TcpListener;
 
 // this binary will target "package name"
@@ -10,6 +12,11 @@ async fn main() -> std::io::Result<()> {
     let configuration =
         get_configuration().expect("failed to read configuration");
 
+    let connection =
+        PgConnection::connect(&configuration.database.connection_string())
+            .await
+            .expect("Failed connect to postgres");
+
     let address = format!("127.0.0.1:{}", configuration.application_port);
     let listener = TcpListener::bind(address).expect("Failed to bind port");
     // We retrieve the port assigned to us by the OS
@@ -17,5 +24,5 @@ async fn main() -> std::io::Result<()> {
 
     // Bubble up the io::Error if we failed to bind the address
     // Otherwise call .await on our Server
-    run(listener)?.await
+    run(listener, connection)?.await
 }
