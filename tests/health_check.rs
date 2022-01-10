@@ -1,9 +1,48 @@
 //! tests/health_check.rs
 
+use dotenv::dotenv;
+use once_cell::sync::Lazy;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use std::net::TcpListener;
 use uuid::Uuid;
 use zero2prod::configuration::{get_configuration, DatabaseSettings};
+use zero2prod::telemetry::{
+    get_line_subscriber, get_subscriber, init_subscriber,
+};
+
+// Ensure that the `tracing` stack is only initialised once using `once_cell`
+static TRACING: Lazy<()> = Lazy::new(|| {
+    let default_filter_level = "info".to_string();
+    let subscriber_name = "test".to_string();
+    // We cannot assign the output of `get_subscriber` to a variable based on the value of `TEST_LOG`
+    // because the sink is part of the type returned by `get_subscriber`, therefore they are not the
+    // same type. We could work around it, but this is the most straight-forward way of moving forward.
+
+    match std::env::var("TEST_LOG") {
+        Ok(v) => {
+            if v == "json" {
+                init_subscriber(get_subscriber(
+                    subscriber_name,
+                    default_filter_level,
+                    std::io::stdout,
+                ));
+            } else {
+                init_subscriber(get_line_subscriber(
+                    default_filter_level,
+                    std::io::stdout,
+                ));
+            }
+        }
+        _ => {
+            let subscriber = get_subscriber(
+                subscriber_name,
+                default_filter_level,
+                std::io::sink,
+            );
+            init_subscriber(subscriber);
+        }
+    };
+});
 
 pub struct TestApp {
     pub address: String,
@@ -15,6 +54,11 @@ pub struct TestApp {
 // if we fail to perform the required setup we can jsut panic and crash
 // all the things
 async fn spawn_app() -> TestApp {
+    dotenv().ok();
+    // The first time `initialize` is invoked the code in `TRACING` is executed.
+    // All other invocations will instead skip execution.
+    Lazy::force(&TRACING);
+
     let listener =
         TcpListener::bind("127.0.0.1:0").expect("Failed to bind random port");
     // We retrieve the port assigned to us by the OS
@@ -29,6 +73,7 @@ async fn spawn_app() -> TestApp {
 
     let server = zero2prod::startup::run(listener, connection_pool.clone())
         .expect("Failed to bind address");
+
     // Launch the server as a background task
     // tokio::spawn returns a handle to the spawned future,
     // but we have no use for it here, hence the non-binding let
