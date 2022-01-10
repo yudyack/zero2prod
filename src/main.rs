@@ -1,10 +1,5 @@
 use sqlx::PgPool;
 use std::net::TcpListener;
-use tracing::subscriber::set_global_default;
-use tracing::Subscriber;
-use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
-use tracing_log::LogTracer;
-use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
 
 // this binary will target "package name"
 use zero2prod::configuration::get_configuration;
