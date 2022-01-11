@@ -51,9 +51,7 @@ where
         .with_writer(sink)
         .with_test_writer();
 
-    Registry::default()
-        .with(env_filter)
-        .with(fmt_layer)
+    Registry::default().with(env_filter).with(fmt_layer)
 }
 
 /// Register a subscriber as global default to process span data.

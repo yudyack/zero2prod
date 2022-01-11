@@ -16,10 +16,11 @@ async fn main() -> std::io::Result<()> {
     let configuration =
         get_configuration().expect("failed to read configuration");
 
-    let connection_pool =
-        PgPool::connect(&configuration.database.connection_string().expose_secret())
-            .await
-            .expect("Failed connect to postgres");
+    let connection_pool = PgPool::connect(
+        &configuration.database.connection_string().expose_secret(),
+    )
+    .await
+    .expect("Failed connect to postgres");
 
     let address = format!("127.0.0.1:{}", configuration.application_port);
     tracing::info!("app started at: {}", &address);

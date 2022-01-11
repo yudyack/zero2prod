@@ -90,10 +90,11 @@ async fn spawn_app() -> TestApp {
 
 pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
     // create database
-    let mut connection =
-        PgConnection::connect(&config.connection_string_without_db().expose_secret())
-            .await
-            .expect("Failed to connect to Postgres");
+    let mut connection = PgConnection::connect(
+        &config.connection_string_without_db().expose_secret(),
+    )
+    .await
+    .expect("Failed to connect to Postgres");
 
     connection
         .execute(
@@ -102,9 +103,10 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
         .await
         .expect("Failed to create database");
 
-    let connection_pool = PgPool::connect(&config.connection_string().expose_secret())
-        .await
-        .expect("Failed connect to postres");
+    let connection_pool =
+        PgPool::connect(&config.connection_string().expose_secret())
+            .await
+            .expect("Failed connect to postres");
 
     sqlx::migrate!("./migrations")
         .run(&connection_pool)
