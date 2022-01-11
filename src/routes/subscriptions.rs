@@ -2,7 +2,6 @@ use actix_web::web;
 use actix_web::HttpResponse;
 use chrono::Utc;
 use sqlx::PgPool;
-use tracing::Instrument;
 use uuid::Uuid;
 
 #[allow(dead_code)]
@@ -12,30 +11,35 @@ pub struct FormData {
     name: String,
 }
 
-pub async fn subscribe(
-    form: web::Form<FormData>,
-    // retrieving from application state
-    connection_pool: web::Data<PgPool>,
-) -> HttpResponse {
-    let request_id = Uuid::new_v4();
-    // Spans, like logs, have an associated level
-    // `info_span` creates a span at the info-level
-    let request_span = tracing::info_span!(
-        "Adding a new subscriber",
-        %request_id,
+#[tracing::instrument(
+    name = "Adding a new subscriber",
+    skip(form, connection_pool),
+    fields(
+        request_id = %Uuid::new_v4(),
         subscriber_email = %form.email,
         subscriber_name = %form.name
-    );
+    )
 
-    // Using `enter` in an async function is a recipe for disaster!
-    // Bear with me for now, but don't do this at home.
-    // See the following section on `Instrumenting Futures`
-    let _request_span_guard = request_span.enter();
+)]
+pub async fn subscribe(
+    form: web::Form<FormData>,
+    connection_pool: web::Data<PgPool>,
+) -> HttpResponse {
+    match insert_subscriber(&form, &connection_pool).await {
+        Ok(_) => HttpResponse::Ok().finish(),
+        Err(_) => HttpResponse::InternalServerError().finish(),
+    }
+}
 
-    let query_span =
-        tracing::info_span!("Saving new subscriber detail in the database");
-
-    match sqlx::query!(
+#[tracing::instrument(
+    name = "Saving new subscriber detail in the database",
+    skip(form, connection_pool)
+)]
+pub async fn insert_subscriber(
+    form: &FormData,
+    connection_pool: &PgPool,
+) -> Result<(), sqlx::Error> {
+    let _a = sqlx::query!(
         r#"
         INSERT INTO subscriptions (id, email, name, subscribed_at)
         VALUES ($1, $2, $3, $4)
@@ -45,17 +49,11 @@ pub async fn subscribe(
         form.name,
         Utc::now()
     )
-    .execute(connection_pool.as_ref())
-    .instrument(query_span)
+    .execute(connection_pool)
     .await
-    {
-        Ok(_) => {
-            tracing::info!("New subscriber detail has been saved");
-            HttpResponse::Ok().finish()
-        }
-        Err(e) => {
-            tracing::error!("Failed to execute query: {:?}", e);
-            HttpResponse::InternalServerError().finish()
-        }
-    }
+    .map_err(|e| {
+        tracing::error!("Failed to execute query: {:?}", e);
+        e
+    })?;
+    Ok(())
 }
