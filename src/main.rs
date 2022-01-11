@@ -1,6 +1,5 @@
 use secrecy::ExposeSecret;
 use sqlx::postgres::PgPoolOptions;
-use sqlx::PgPool;
 use std::net::TcpListener;
 
 // this binary will target "package name"
