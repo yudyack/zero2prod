@@ -33,7 +33,6 @@ jobs:
     env:
       SQLX_VERSION: 0.5.10
       SQLX_FEATURES: postgres
-      DATABASE_URL: "postgres://postgres:password@localhost:5432/newsletter" 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -117,7 +116,6 @@ jobs:
     env:
       SQLX_VERSION: 0.5.10
       SQLX_FEATURES: postgres
-      DATABASE_URL: "postgres://postgres:password@localhost:5432/newsletter" 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
