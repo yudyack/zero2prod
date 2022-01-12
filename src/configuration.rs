@@ -2,7 +2,10 @@
 
 use secrecy::{ExposeSecret, Secret};
 use serde_aux::field_attributes::deserialize_number_from_string;
-use sqlx::{postgres::{PgConnectOptions, PgSslMode}, ConnectOptions};
+use sqlx::{
+    postgres::{PgConnectOptions, PgSslMode},
+    ConnectOptions,
+};
 #[derive(serde:: Deserialize, Debug)]
 pub struct Settings {
     pub database: DatabaseSettings,
@@ -25,7 +28,7 @@ pub struct DatabaseSettings {
     pub host: String,
     pub database_name: String,
     // Determine if we demand the connection to be encrypted or not
-    pub require_ssl: bool
+    pub require_ssl: bool,
 }
 
 impl DatabaseSettings {
@@ -46,11 +49,9 @@ impl DatabaseSettings {
     }
 
     pub fn with_db(&self) -> PgConnectOptions {
-        let mut options = self.without_db()
-        .database(&self.database_name);
+        let mut options = self.without_db().database(&self.database_name);
         options.log_statements(tracing::log::LevelFilter::Trace);
         options
-
     }
 }
 
