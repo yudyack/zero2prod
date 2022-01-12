@@ -16,6 +16,9 @@ on: [push, pull_request]
 
 env:
   CARGO_TERM_COLOR: always
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: password
+  POSTGRES_DB: postgres
 
 jobs:
   test:
@@ -25,15 +28,13 @@ jobs:
       postgres:
         image: postgres:12
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: postgres
+
         ports:
           - 5432:5432
     env:
       SQLX_VERSION: 0.5.10
       SQLX_FEATURES: postgres
-      DATABASE_URL: ${{ format('postgres://{}:{}@localhost:5432/{}', services.postgres.env.POSTGRES_USER, services.postgres.env.POSTGRES_PASSWORD. services.postgres.env.POSTGRES_DB) }}
+      DATABASE_URL: ${{ format('postgres://{}:{}@localhost:5432/{}', env.POSTGRES_USER, env.POSTGRES_PASSWORD. env.POSTGRES_DB) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
