@@ -33,6 +33,7 @@ jobs:
     env:
       SQLX_VERSION: 0.5.10
       SQLX_FEATURES: postgres
+      DATABASE_URL: ${{ format('postgres://{}:{}@localhost:5432/{}', postgres.env.POSTGRES_USER, postgres.env.POSTGRES_PASSWORD. postgres.env.POSTGRES_DB) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
