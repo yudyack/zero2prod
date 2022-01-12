@@ -14,7 +14,7 @@ async fn main() -> std::io::Result<()> {
     init_subscriber(subscriber);
 
     let configuration =
-        get_configuration().expect("failed to read configuration");
+        get_configuration().expect("failed to read configuration ");
 
     let connection_pool = PgPoolOptions::new()
         .connect_timeout(std::time::Duration::from_secs(2))
