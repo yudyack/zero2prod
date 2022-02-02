@@ -8,6 +8,7 @@ use uuid::Uuid;
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::domain::NewSubscriber;
+use crate::domain::SubscriberEmail;
 use crate::domain::SubscriberName;
 
 #[allow(dead_code)]
@@ -33,10 +34,25 @@ pub async fn subscribe(
     // if !is_valid_name(&form.name) {
     //     return HttpResponse::BadRequest().finish();
     // }
-    // let form1: FormData = form.0;
+    let name = match SubscriberName::parse(form.0.name) {
+        Ok(name) => name,
+        Err(e) => {
+            tracing::error!("{}", e);
+            return HttpResponse::BadRequest().finish();
+        }
+    };
+
+    let email = match SubscriberEmail::parse(form.0.email) {
+        Ok(email) => email,
+        Err(e) => {
+            tracing::error!("{}", e);
+            return HttpResponse::BadRequest().finish();
+        }
+    };
+
     let new_subscriber = NewSubscriber {
-        email: form.0.email,
-        name: SubscriberName::parse(form.0.name),
+        email,
+        name,
     };
 
     match insert_subscriber(&connection_pool, &new_subscriber).await {
@@ -82,8 +98,8 @@ pub async fn insert_subscriber(
         VALUES ($1, $2, $3, $4)
         "#,
         Uuid::new_v4(),
-        new_subscriber.email,
-        new_subscriber.name.inner_ref(),
+        new_subscriber.email.as_ref(),
+        new_subscriber.name.as_ref(),
         Utc::now()
     )
     .execute(connection_pool)
