@@ -1,8 +1,8 @@
 use actix_web::dev::Server;
 use actix_web::web;
+use actix_web::web::Data;
 use actix_web::App;
 use actix_web::HttpServer;
-use actix_web::web::Data;
 use sqlx::PgPool;
 use std::net::TcpListener;
 use tracing_actix_web::TracingLogger;
