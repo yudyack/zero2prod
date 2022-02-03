@@ -25,6 +25,7 @@ impl TryFrom<FormData> for NewSubscriber {
     }
 }
 
+#[allow(clippy::async_yields_async)]
 #[tracing::instrument(
     name = "Adding a new subscriber ",
     skip(form, connection_pool),
@@ -32,7 +33,6 @@ impl TryFrom<FormData> for NewSubscriber {
         subscriber_email = %form.email,
         subscriber_name = %form.name
     )
-
 )]
 pub async fn subscribe(
     form: web::Form<FormData>,
