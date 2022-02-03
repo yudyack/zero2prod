@@ -4,7 +4,6 @@ use chrono::Utc;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-
 use crate::domain::NewSubscriber;
 use crate::domain::SubscriberEmail;
 use crate::domain::SubscriberName;
@@ -24,7 +23,6 @@ impl TryFrom<FormData> for NewSubscriber {
         let name = SubscriberName::parse(form.name)?;
         Ok(NewSubscriber { email, name })
     }
-
 }
 
 #[tracing::instrument(
@@ -53,7 +51,6 @@ pub async fn subscribe(
         Err(_) => HttpResponse::InternalServerError().finish(),
     }
 }
-
 
 #[tracing::instrument(
     name = "Saving new subscriber detail in the database",
