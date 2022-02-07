@@ -8,14 +8,14 @@ use sqlx::{
 };
 
 use crate::domain::SubscriberEmail;
-#[derive(serde:: Deserialize, Debug)]
+#[derive(serde:: Deserialize, Debug, Clone)]
 pub struct Settings {
     pub database: DatabaseSettings,
     pub application: ApplicationSettings,
     pub email_client: EmailClientSettings,
 }
 
-#[derive(serde:: Deserialize, Debug)]
+#[derive(serde:: Deserialize, Debug, Clone)]
 pub struct EmailClientSettings {
     pub base_url: String,
     pub sender_email: String,
@@ -33,14 +33,14 @@ impl EmailClientSettings {
     }
 }
 
-#[derive(serde:: Deserialize, Debug)]
+#[derive(serde:: Deserialize, Debug, Clone)]
 pub struct ApplicationSettings {
     #[serde(deserialize_with = "deserialize_number_from_string")]
     pub port: u16,
     pub host: String,
 }
 
-#[derive(serde::Deserialize, Debug)]
+#[derive(serde::Deserialize, Debug, Clone)]
 pub struct DatabaseSettings {
     pub username: String,
     pub password: Secret<String>,
