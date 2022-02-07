@@ -1,6 +1,6 @@
 use crate::helpers::spawn_app;
 
-#[actix_web::test]
+#[tokio::test]
 async fn subscribe_return_a_200_for_valid_form_data() {
     // Arrange
     let app = spawn_app().await;
@@ -21,7 +21,7 @@ async fn subscribe_return_a_200_for_valid_form_data() {
     assert_eq!(200, response.status().as_u16());
 }
 
-#[actix_web::test]
+#[tokio::test]
 async fn subscribe_return_a_400_when_data_is_missing() {
     // Arrange
     let app = spawn_app().await;
@@ -45,7 +45,7 @@ async fn subscribe_return_a_400_when_data_is_missing() {
     }
 }
 
-#[actix_web::test]
+#[tokio::test]
 async fn subscribe_returns_a_200_when_fields_are_present_but_invalid() {
     // Arrange
     let app = spawn_app().await;

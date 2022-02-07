@@ -21,7 +21,7 @@ impl EmailClient {
         let http_client = Client::builder().timeout(timeout).build().unwrap();
 
         Self {
-            http_client: http_client,
+            http_client,
             base_url,
             sender,
             authorization_token,
@@ -42,7 +42,7 @@ impl EmailClient {
         let request_body = SendEmailRequest {
             from: self.sender.as_ref(),
             to: recipient.as_ref(),
-            subject: subject,
+            subject,
             html_body: html_content,
             text_body: test_content,
         };
@@ -74,6 +74,7 @@ struct SendEmailRequest<'a> {
 #[cfg(test)]
 mod tests {
     use claim::assert_err;
+    use claim::assert_ok;
     use fake::faker::internet::en::SafeEmail;
     use fake::faker::lorem::en::{Paragraph, Sentence};
     use fake::Fake;
@@ -108,7 +109,7 @@ mod tests {
             base_url,
             email(),
             Secret::new(Faker.fake()),
-            std::time::Duration::from_millis(10),
+            std::time::Duration::from_millis(500),
         )
     }
 
@@ -155,11 +156,11 @@ mod tests {
             .await;
 
         // Assert
-        assert!(result.is_ok());
+        assert_ok!(result);
     }
 
     #[tokio::test]
-    async fn send_email_succeeds_if_the_serer_returns_200() {
+    async fn send_email_succeeds_if_the_server_returns_200() {
         // Arrange
         let mock_server = MockServer::start().await;
         let email_client = email_client(mock_server.uri());
@@ -176,7 +177,7 @@ mod tests {
             .await;
 
         // Assert
-        assert!(result.is_ok());
+        assert_ok!(result);
     }
 
     #[tokio::test]
