@@ -13,11 +13,11 @@ async fn subscribe_return_a_200_for_valid_form_data() {
     let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
 
     Mock::given(path("/email"))
-    .and(method("POST"))
-    .respond_with(ResponseTemplate::new(200))
-    .expect(1)
-    .mount(&app.email_server)
-    .await;
+        .and(method("POST"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(1)
+        .mount(&app.email_server)
+        .await;
 
     // Act
     let response = app.post_subscription(body.into()).await;

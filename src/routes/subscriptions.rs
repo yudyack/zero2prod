@@ -59,7 +59,7 @@ pub async fn subscribe(
         .await
         .is_err()
     {
-       return HttpResponse::InternalServerError().finish(); 
+        return HttpResponse::InternalServerError().finish();
     }
 
     HttpResponse::Ok().finish()
