@@ -7,6 +7,7 @@ use uuid::Uuid;
 use crate::domain::NewSubscriber;
 use crate::domain::SubscriberEmail;
 use crate::domain::SubscriberName;
+use crate::email_client::EmailClient;
 
 #[allow(dead_code)]
 #[derive(serde::Deserialize)]
@@ -28,7 +29,7 @@ impl TryFrom<FormData> for NewSubscriber {
 #[allow(clippy::async_yields_async)]
 #[tracing::instrument(
     name = "Adding a new subscriber ",
-    skip(form, connection_pool),
+    skip(form, connection_pool, email_client),
     fields(
         subscriber_email = %form.email,
         subscriber_name = %form.name
@@ -37,6 +38,7 @@ impl TryFrom<FormData> for NewSubscriber {
 pub async fn subscribe(
     form: web::Form<FormData>,
     connection_pool: web::Data<PgPool>,
+    email_client: web::Data<EmailClient>,
 ) -> HttpResponse {
     let new_subscriber = match form.into_inner().try_into() {
         Ok(new_subscriber) => new_subscriber,
@@ -46,10 +48,21 @@ pub async fn subscribe(
         }
     };
 
-    match insert_subscriber(&connection_pool, &new_subscriber).await {
-        Ok(_) => HttpResponse::Ok().finish(),
-        Err(_) => HttpResponse::InternalServerError().finish(),
-    }
+    if insert_subscriber(&connection_pool, &new_subscriber).await.is_err() {
+        return HttpResponse::InternalServerError().finish();
+    };
+
+    // send a (uselses) email to the new subscriber
+    if email_client.send_email(
+        new_subscriber.email,
+        "Welcome",
+        "Welcome to our newsletter",
+        "Welcome to our newsletter",
+    ).await.is_err() {
+        return HttpResponse::InternalServerError().finish();
+    };
+
+    HttpResponse::Ok().finish()
 }
 
 #[tracing::instrument(
