@@ -33,7 +33,7 @@ impl EmailClient {
         recipient: SubscriberEmail,
         subject: &str,
         html_content: &str,
-        test_content: &str,
+        text_content: &str,
     ) -> Result<(), reqwest::Error> {
         // You can do better using `reqwest::Url::join` if you change
         // `base_url`'s type from `String` to `reqwest::Url`.
@@ -44,7 +44,7 @@ impl EmailClient {
             to: recipient.as_ref(),
             subject,
             html_body: html_content,
-            text_body: test_content,
+            text_body: text_content,
         };
 
         self.http_client

@@ -48,17 +48,34 @@ pub async fn subscribe(
         }
     };
 
-    if insert_subscriber(&connection_pool, &new_subscriber).await.is_err() {
+    if insert_subscriber(&connection_pool, &new_subscriber)
+        .await
+        .is_err()
+    {
         return HttpResponse::InternalServerError().finish();
     };
 
+    let confirmation_link = "https://my-api.com/subscriptions/confirm";
+
     // send a (uselses) email to the new subscriber
-    if email_client.send_email(
-        new_subscriber.email,
-        "Welcome",
-        "Welcome to our newsletter",
-        "Welcome to our newsletter",
-    ).await.is_err() {
+    if email_client
+        .send_email(
+            new_subscriber.email,
+            "Welcome",
+            &format!(
+                "Welcome to our newsletter!<br/>
+            Click <a href=\"{}\">here</a> to confirm your subscription.",
+                confirmation_link
+            ),
+            &format!(
+                "Welcome to our newsletter!\n
+            Visit {} to confirm your subscription.",
+                confirmation_link
+            ),
+        )
+        .await
+        .is_err()
+    {
         return HttpResponse::InternalServerError().finish();
     };
 
