@@ -1,5 +1,6 @@
 use dotenv::dotenv;
 use once_cell::sync::Lazy;
+use serde_json::Value;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 
 use uuid::Uuid;
@@ -47,9 +48,14 @@ static TRACING: Lazy<()> = Lazy::new(|| {
 
 pub struct TestApp {
     pub address: String,
+    pub port: u16,
     pub db_pool: PgPool,
     pub email_server: MockServer,
-    pub port: u16,
+}
+
+pub struct ConfirmationLinks {
+    pub html: reqwest::Url,
+    pub plain_text: reqwest::Url,
 }
 
 impl TestApp {
@@ -61,6 +67,36 @@ impl TestApp {
             .send()
             .await
             .expect("Failed to execute request.")
+    }
+
+    // accept mock server request (json that will be send to postframe) and search and return links in request
+    pub fn get_confirmation_links(
+        &self,
+        email_request: &wiremock::Request,
+    ) -> ConfirmationLinks {
+        // Parse the body as JSON, starting from raw bytes
+        let body: Value = serde_json::from_slice(&email_request.body).unwrap();
+
+        // Extract the link from one of the request fields
+        let get_link = |s: &str| {
+            let links: Vec<_> = linkify::LinkFinder::new()
+                .links(s)
+                .filter(|l| *l.kind() == linkify::LinkKind::Url)
+                .collect();
+                assert_eq!(links.len(), 1);
+                let raw_link = links[0].as_str().to_owned();
+                let mut confirmation_link = reqwest::Url::parse(&raw_link).unwrap();
+                // make sure host is local
+                assert_eq!(confirmation_link.host_str().unwrap(), "127.0.0.1");
+                // make sure port is the same as the one used by the spawned app
+                confirmation_link.set_port(Some(self.port)).unwrap();
+                confirmation_link
+        };
+
+        let html = get_link(&body["HtmlBody"].as_str().unwrap());
+        let plain_text = get_link(&body["TextBody"].as_str().unwrap());
+
+        ConfirmationLinks { html, plain_text }
     }
 }
 

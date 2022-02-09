@@ -3,17 +3,17 @@ use sqlx::PgPool;
 
 #[derive(serde::Deserialize)]
 pub struct Parameters {
-    _subscription_token: String,
+    subscription_token: String,
 }
 
 #[allow(clippy::async_yields_async)]
 #[tracing::instrument(
     name = "Confirm a pending subscriber",
-    skip(_connection_pool, _parameters)
+    skip(parameters)
 )]
 pub async fn subscribe_confirm(
-    _connection_pool: web::Data<PgPool>,
-    _parameters: web::Query<Parameters>,
+    parameters: web::Query<Parameters>
 ) -> HttpResponse {
+    log::trace!("{}", parameters.subscription_token);
     HttpResponse::Ok().finish()
 }
