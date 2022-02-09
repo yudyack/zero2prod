@@ -1,4 +1,3 @@
-
 use wiremock::{
     matchers::{method, path},
     Mock, ResponseTemplate,
