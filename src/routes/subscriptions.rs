@@ -1,6 +1,8 @@
 use actix_web::web;
 use actix_web::HttpResponse;
 use chrono::Utc;
+use rand::distributions::Alphanumeric;
+use rand::Rng;
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -50,16 +52,33 @@ pub async fn subscribe(
         }
     };
 
-    if insert_subscriber(&connection_pool, &new_subscriber)
+    let subscriber_id =
+        match insert_subscriber(&connection_pool, &new_subscriber).await {
+            Ok(subscriber_id) => subscriber_id,
+            Err(err) => {
+                tracing::error!("{}", err);
+                return HttpResponse::InternalServerError().finish();
+            }
+        };
+
+    let subscription_token = generate_subscription_token();
+
+    if store_token(&connection_pool, &subscription_token, subscriber_id)
         .await
         .is_err()
     {
+        tracing::error!("Failed to store token");
         return HttpResponse::InternalServerError().finish();
     };
 
-    if send_confirmation_email(&email_client, new_subscriber, &base_url.0)
-        .await
-        .is_err()
+    if send_confirmation_email(
+        &email_client,
+        new_subscriber,
+        &base_url.0,
+        &subscription_token,
+    )
+    .await
+    .is_err()
     {
         return HttpResponse::InternalServerError().finish();
     }
@@ -75,10 +94,11 @@ pub async fn send_confirmation_email(
     email_client: &EmailClient,
     new_subscriber: NewSubscriber,
     base_url: &str,
+    subscription_token: &str,
 ) -> Result<(), reqwest::Error> {
     let confirmation_link = format!(
-        "{}/subscription/confirm?subscription_token=mytoken",
-        base_url
+        "{}/subscription/confirm?subscription_token={}",
+        base_url, subscription_token
     );
     // send a (useless) email to the new subscriber
     email_client
@@ -125,4 +145,36 @@ pub async fn insert_subscriber(
         e
     })?;
     Ok(subscriber_id)
+}
+
+// Generate a random 25-character-long case-sensitive subscription token.
+fn generate_subscription_token() -> String {
+    let mut rng = rand::thread_rng();
+    std::iter::repeat_with(|| rng.sample(Alphanumeric))
+        .map(char::from)
+        .take(25)
+        .collect()
+}
+
+#[tracing::instrument(name = "Store token", skip(connection_pool))]
+pub async fn store_token(
+    connection_pool: &PgPool,
+    subscription_token: &str,
+    subscriber_id: Uuid,
+) -> Result<(), sqlx::Error> {
+    let _a = sqlx::query!(
+        r#"
+        INSERT INTO subscription_token (subscription_token, subscriber_id)
+        VALUES ($1, $2)
+        "#,
+        subscription_token,
+        subscriber_id
+    )
+    .execute(connection_pool)
+    .await
+    .map_err(|e| {
+        tracing::error!("Failed to execute query: {:?}", e);
+        e
+    })?;
+    Ok(())
 }

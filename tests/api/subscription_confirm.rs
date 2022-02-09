@@ -1,5 +1,5 @@
-use reqwest::Url;
-use serde_json::Value;
+
+
 use wiremock::{
     matchers::{method, path},
     Mock, ResponseTemplate,
@@ -48,9 +48,8 @@ async fn the_link_returned_with_200_if_called() {
     assert_eq!(response.status().as_u16(), 200);
 }
 
-
 #[tokio::test]
-async fn clicl_on_link_confirms_a_subscriber() {
+async fn click_on_link_confirms_a_subscriber() {
     // Arrange
     let app = spawn_app().await;
     let body = "name=le%20guin&email=ursula_le_guin3%40gmail.com";
@@ -71,8 +70,19 @@ async fn clicl_on_link_confirms_a_subscriber() {
     // search and return links in json request that will be send to post frame
     let confirmation_link = app.get_confirmation_links(&email_requests[0]);
     // fire the link to spawned (test) app and get response
-    let response = reqwest::get(confirmation_link.html).await.unwrap();
+    reqwest::get(confirmation_link.html)
+        .await
+        .unwrap()
+        .error_for_status()
+        .unwrap();
 
     // Assert
-    assert_eq!(response.status().as_u16(), 200);
+    let saved = sqlx::query!("SELECT * FROM subscriptions")
+        .fetch_one(&app.db_pool)
+        .await
+        .expect("Failed to fetch saved subscription");
+
+    assert_eq!(saved.name, "le guin");
+    assert_eq!(saved.email, "ursula_le_guin3@gmail.com");
+    assert_eq!(saved.status, "confirmed");
 }

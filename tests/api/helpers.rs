@@ -83,14 +83,14 @@ impl TestApp {
                 .links(s)
                 .filter(|l| *l.kind() == linkify::LinkKind::Url)
                 .collect();
-                assert_eq!(links.len(), 1);
-                let raw_link = links[0].as_str().to_owned();
-                let mut confirmation_link = reqwest::Url::parse(&raw_link).unwrap();
-                // make sure host is local
-                assert_eq!(confirmation_link.host_str().unwrap(), "127.0.0.1");
-                // make sure port is the same as the one used by the spawned app
-                confirmation_link.set_port(Some(self.port)).unwrap();
-                confirmation_link
+            assert_eq!(links.len(), 1);
+            let raw_link = links[0].as_str().to_owned();
+            let mut confirmation_link = reqwest::Url::parse(&raw_link).unwrap();
+            // make sure host is local
+            assert_eq!(confirmation_link.host_str().unwrap(), "127.0.0.1");
+            // make sure port is the same as the one used by the spawned app
+            confirmation_link.set_port(Some(self.port)).unwrap();
+            confirmation_link
         };
 
         let html = get_link(&body["HtmlBody"].as_str().unwrap());
