@@ -13,7 +13,7 @@ name = "zero2prod" # this is the file name of the binary
 
 
 [dependencies]
-actix-web = "4.0.0-beta.19"
+actix-web = "=4.0.0-beta.19"
 tokio = { version = "1.15.0",features = ["macros", "rt-multi-thread"]}
 serde = { version = "1.0.133", features = ["derive"] }
 config = "0.11.0"
@@ -23,7 +23,7 @@ log = "0.4.14"
 env_logger = "0.9.0"
 tracing = {version = "0.1.19", features = ["log"]} # log features to enable log
 tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
-tracing-bunyan-formatter = "0.3.1" # library from writer to enable layer inheritance
+tracing-bunyan-formatter = "0.3" # library from writer to enable layer inheritance
 tracing-log = "0.1.1" # register log implementation to redirect logs into tracing subscriber
 tracing-actix-web = "=0.5.0-beta.9" # for lib TracingLogger
 dotenv = "0.15.0"

@@ -23,12 +23,14 @@ static TRACING: Lazy<()> = Lazy::new(|| {
     match std::env::var("TEST_LOG") {
         Ok(v) => {
             if v == "json" {
+                println!("Using JSON output");
                 init_subscriber(get_subscriber(
                     subscriber_name,
                     default_filter_level,
                     std::io::stdout,
                 ));
             } else {
+                println!("Using text output");
                 init_subscriber(get_line_subscriber(
                     default_filter_level,
                     std::io::stdout,
