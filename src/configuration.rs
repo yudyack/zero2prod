@@ -51,6 +51,7 @@ pub struct DatabaseSettings {
     pub database_name: String,
     // Determine if we demand the connection to be encrypted or not
     pub require_ssl: bool,
+    pub migrate: bool,
 }
 
 impl DatabaseSettings {

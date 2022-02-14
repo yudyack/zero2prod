@@ -3,8 +3,11 @@ use actix_web::web;
 use actix_web::web::Data;
 use actix_web::App;
 use actix_web::HttpServer;
+use sqlx::migrate::MigrateError;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
+use sqlx::Pool;
+use sqlx::Postgres;
 use std::net::TcpListener;
 use tracing_actix_web::TracingLogger;
 
@@ -27,6 +30,10 @@ impl Application {
         configuration: Settings,
     ) -> Result<Self, std::io::Error> {
         let connection_pool = get_connection_pool(&configuration.database);
+
+        migrate(&configuration, &connection_pool)
+            .await
+            .expect("Failed to migrate database");
 
         let sender_email = configuration
             .email_client
@@ -73,6 +80,18 @@ pub fn get_connection_pool(configuration: &DatabaseSettings) -> PgPool {
     PgPoolOptions::new()
         .connect_timeout(std::time::Duration::from_secs(2))
         .connect_lazy_with(configuration.with_db())
+}
+
+async fn migrate(
+    configuration: &Settings,
+    connection_pool: &Pool<Postgres>,
+) -> Result<(), MigrateError> {
+    if configuration.database.migrate {
+        tracing::info!("migrating postgres");
+        sqlx::migrate!("./migrations").run(connection_pool).await
+    } else {
+        Ok(())
+    }
 }
 
 // We need to define a wrapper type in order to retrieve the URL

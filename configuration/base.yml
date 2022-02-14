@@ -7,6 +7,7 @@ database:
   username: "postgres"
   password: "password"
   database_name: "newsletter"
+  migrate: false
 
 email_client:
   base_url: "localhost"
