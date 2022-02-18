@@ -15,6 +15,7 @@ use crate::configuration::DatabaseSettings;
 use crate::configuration::Settings;
 use crate::email_client::EmailClient;
 use crate::routes::health_check;
+use crate::routes::publish_newsletter;
 use crate::routes::subscribe;
 use crate::routes::subscribe_confirm;
 
@@ -116,6 +117,7 @@ pub fn run(
             .route("/health_check", web::get().to(health_check))
             .route("/subscription", web::post().to(subscribe))
             .route("/subscription/confirm", web::get().to(subscribe_confirm))
+            .route("/newsletters", web::post().to(publish_newsletter))
             .app_data(connection_pool.clone())
             .app_data(email_client.clone())
             .app_data(base_url.clone())
