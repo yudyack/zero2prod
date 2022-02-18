@@ -25,6 +25,24 @@
       "nullable": []
     }
   },
+  "d8175db6a5c534385ae5072d842b30b761cff6219d77771428eee7552e031ae1": {
+    "query": "\n            SELECT email FROM subscriptions \n            WHERE status = 'confirmed'\n        ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "email",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": []
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
   "e6822c9e162eabc20338cc27d51a8e80578803ec1589c234d93c3919d14a96a6": {
     "query": "\n        INSERT INTO subscriptions (id, email, name, subscribed_at, status)\n        VALUES ($1, $2, $3, $4, 'pending_confirmation')\n        ",
     "describe": {

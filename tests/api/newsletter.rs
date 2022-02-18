@@ -25,12 +25,7 @@ async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
         }
     });
 
-    let response = reqwest::Client::new()
-        .post(&format!("{}/newsletters", &app.address))
-        .json(&newsletter_request_body)
-        .send()
-        .await
-        .expect("Failed to execute request.");
+    let response = app.post_newsletters(&newsletter_request_body).await;
 
     // Assert
     assert_eq!(response.status().as_u16(), 200);
@@ -95,19 +90,49 @@ async fn newsletters_are_delivered_to_confirmed_subscribers() {
     let newsletter_request_body = serde_json::json! ({
         "title": "Newsletter title",
         "content": {
-        "text": "Newsletter body as plain text",
-        "html": "<p>Newsletter body as HTML</p>",
+            "text": "Newsletter body as plain text",
+            "html": "<p>Newsletter body as HTML</p>",
         }
     });
 
-    let response = reqwest::Client::new()
-        .post(&format!("{}/newsletters", &app.address))
-        .json(&newsletter_request_body)
-        .send()
-        .await
-        .expect("Failed to execute request.");
+    let response = app.post_newsletters(&newsletter_request_body).await;
 
     // Assert
     assert_eq!(response.status().as_u16(), 200);
     // Mock verifies on Drop that we haven't sent the newsletter email
+}
+
+#[tokio::test]
+async fn newsletters_returns_400_for_invalid_data() {
+    // Arrange
+    let app = spawn_app().await;
+    let test_cases = vec![
+        (
+            serde_json::json!({
+                "content" : {
+                    "text" : "Newsletter body as plain text",
+                    "html" : "<p>Newsletter body as HTML</p>"
+                }
+            }),
+            "missing title",
+        ),
+        (
+            serde_json::json!({
+                "title": "Newsletter title"
+            }),
+            "missing content",
+        ),
+    ];
+
+    for (invalid_body, error_message) in test_cases {
+        let response = app.post_newsletters(&invalid_body).await;
+
+        // Assert
+        assert_eq!(
+            400,
+            response.status().as_u16(),
+            "The API did not fail with 400 Bad Request when the pylaod was {}.",
+            error_message
+        );
+    }
 }
