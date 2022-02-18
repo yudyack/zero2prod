@@ -11,7 +11,7 @@ async fn confirmation_without_token_are_rejected_with_a_400() {
     let app = spawn_app().await;
     // Act
     let response =
-        reqwest::get(&format!("{}/subscription/confirm", app.address))
+        reqwest::get(&format!("{}/subscriptions/confirm", app.address))
             .await
             .unwrap();
     // Assert
@@ -33,7 +33,7 @@ async fn the_link_returned_with_200_if_called() {
         .mount(&app.email_server)
         .await;
 
-    app.post_subscription(body.into()).await;
+    app.post_subscriptions(body.into()).await;
     let email_requests = &app.email_server.received_requests().await.unwrap();
 
     // Act
@@ -61,7 +61,7 @@ async fn click_on_link_confirms_a_subscriber() {
         .mount(&app.email_server)
         .await;
 
-    app.post_subscription(body.into()).await;
+    app.post_subscriptions(body.into()).await;
     let email_requests = &app.email_server.received_requests().await.unwrap();
 
     // Act

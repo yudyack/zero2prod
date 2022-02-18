@@ -19,7 +19,7 @@ async fn subscribe_return_a_200_for_valid_form_data() {
         .await;
 
     // Act
-    let response = app.post_subscription(body.into()).await;
+    let response = app.post_subscriptions(body.into()).await;
 
     // Assert
     assert_eq!(200, response.status().as_u16());
@@ -39,7 +39,7 @@ async fn subscribe_persists_the_new_subscriber() {
         .await;
 
     // Act
-    app.post_subscription(body.into()).await;
+    app.post_subscriptions(body.into()).await;
 
     // Assert
     let saved = sqlx::query!("SELECT email, name, status FROM subscriptions",)
@@ -64,7 +64,7 @@ async fn subscribe_return_a_400_when_data_is_missing() {
 
     // Act
     for (invalid_body, error_message) in test_cases {
-        let response = app.post_subscription(invalid_body.into()).await;
+        let response = app.post_subscriptions(invalid_body.into()).await;
 
         // Assert
         assert_eq!(
@@ -87,7 +87,7 @@ async fn subscribe_returns_a_200_when_fields_are_present_but_invalid() {
     ];
     for (body, description) in test_cases {
         // Act
-        let response = app.post_subscription(body.into()).await;
+        let response = app.post_subscriptions(body.into()).await;
 
         // Assert
         assert_eq!(
@@ -113,7 +113,7 @@ async fn subscribe_sends_a_confirmation_email_for_valid_data() {
         .await;
 
     // Act
-    let _response = app.post_subscription(body.into()).await;
+    let _response = app.post_subscriptions(body.into()).await;
 
     // Assert
     // Mock assert on drop
@@ -135,7 +135,7 @@ async fn subscribe_sends_a_confirmation_email_with_a_link() {
         .await;
 
     // Act
-    let _response = app.post_subscription(body.into()).await;
+    let _response = app.post_subscriptions(body.into()).await;
     let email_requests = &app.email_server.received_requests().await.unwrap();
     // Assert
     // search and return links in json request that will be send to post frame
@@ -163,7 +163,7 @@ async fn subscribe_fails_if_there_is_a_fatal_database_error() {
         .await
         .unwrap();
     // Act
-    let response = app.post_subscription(body.into()).await;
+    let response = app.post_subscriptions(body.into()).await;
     // Assert
     assert_eq!(response.status().as_u16(), 500);
 }
