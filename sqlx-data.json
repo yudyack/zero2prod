@@ -25,6 +25,32 @@
       "nullable": []
     }
   },
+  "ae241d2b133bbdbfbd8e1fa4b4c6bd473e8dc5c8a1eaa99a399ab157b94635c3": {
+    "query": "\n        SELECT user_id, password_hash\n        FROM users\n        WHERE username = $1 \n        ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "user_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "password_hash",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false
+      ]
+    }
+  },
   "d8175db6a5c534385ae5072d842b30b761cff6219d77771428eee7552e031ae1": {
     "query": "\n            SELECT email FROM subscriptions \n            WHERE status = 'confirmed'\n        ",
     "describe": {

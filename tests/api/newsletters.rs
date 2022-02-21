@@ -1,5 +1,5 @@
 use crate::helpers::{spawn_app, ConfirmationLinks, TestApp};
-use actix_web::ResponseError;
+
 use wiremock::matchers::{any, method, path};
 use wiremock::{Mock, ResponseTemplate};
 
@@ -155,8 +155,11 @@ async fn requests_missing_authorization_are_rejected() {
         .send()
         .await
         .expect("Failed execute request.");
-    
+
     // Assert
     assert_eq!(401, response.status().as_u16());
-    assert_eq!(r#"Basic realm="publish""#, response.headers()["WWW-Authenticate"]);
+    assert_eq!(
+        r#"Basic realm="publish""#,
+        response.headers()["WWW-Authenticate"]
+    );
 }
