@@ -2,9 +2,7 @@ use actix_web::http::header::{self, HeaderMap, HeaderValue};
 use actix_web::http::StatusCode;
 use actix_web::{web, HttpResponse, ResponseError};
 use anyhow::Context;
-use argon2::{
-    Argon2, PasswordHash, PasswordVerifier,
-};
+use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use secrecy::{ExposeSecret, Secret};
 use sqlx::PgPool;
 
@@ -53,26 +51,42 @@ async fn validate_credentials(
     credentials: Credentials,
     pool: &PgPool,
 ) -> Result<uuid::Uuid, PublishError> {
-    let (user_id, expected_password_hash) =
+    let mut user_id = None;
+    let mut expected_password_hash = Secret::new(
+        "$argon2id$v=19$m=15000,t=2,p=1$\
+                gZiV/M1gPc22ElAH/Jh1Hw$\
+                CWOrkoo7oJBQ/iyh7uJ0LO2aLEfrHwTWllSAxT0zRno"
+            .to_string(),
+    );
+
+    if let Some((stored_user_id, stored_password_hash)) =
         get_stored_credentials(&credentials.username, &pool)
             .await
             .map_err(PublishError::UnexpectedError)?
-            .ok_or_else(|| {
-                PublishError::AuthError(anyhow::anyhow!("Unknown username"))
-            })?;
+    {
+        user_id = Some(stored_user_id);
+        expected_password_hash = stored_password_hash;
+    }
 
-    spawn_blocking_with_tracing(move || {
+    // do the verifying process first then handle user id if it exists
+    let verifying = spawn_blocking_with_tracing(move || {
         // We then pass ownership to it into the closure
         // and explicitly executes all our computation
         // within its scope.
         verify_password_hash(expected_password_hash, credentials.password)
     })
-    .await
-    // spawn blocking is fallible - we have a nested result
-    .context("Failed to spawn blocking task.")
-    .map_err(PublishError::UnexpectedError)??;
+    .await;
 
-    Ok(user_id)
+    let user_id = user_id.ok_or_else(|| {
+        PublishError::AuthError(anyhow::anyhow!("Unknown username"))
+    });
+
+    // spawn blocking is fallible - we have a nested result
+    verifying
+        .context("Failed to spawn blocking task.")
+        .map_err(PublishError::UnexpectedError)??;
+
+    user_id
 }
 
 #[tracing::instrument(
@@ -84,18 +98,17 @@ fn verify_password_hash(
     password_candidate: Secret<String>,
 ) -> Result<(), PublishError> {
     let expected_password_hash =
-        PasswordHash::new(&expected_password_hash.expose_secret())
+        PasswordHash::new(expected_password_hash.expose_secret())
             .context("Failed to parse password hash in PHC string format")
             .map_err(PublishError::UnexpectedError)?;
 
     Argon2::default()
         .verify_password(
-            &password_candidate.expose_secret().as_bytes(),
+            password_candidate.expose_secret().as_bytes(),
             &expected_password_hash,
         )
         .context("Invalid password.")
-        .map_err(PublishError::UnexpectedError)?;
-
+        .map_err(PublishError::AuthError)?;
     Ok(())
 }
 
