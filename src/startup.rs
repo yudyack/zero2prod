@@ -15,9 +15,11 @@ use crate::configuration::DatabaseSettings;
 use crate::configuration::Settings;
 use crate::email_client::EmailClient;
 use crate::routes::health_check;
+use crate::routes::login_form;
 use crate::routes::publish_newsletter;
 use crate::routes::subscribe;
 use crate::routes::subscribe_confirm;
+use crate::routes::home;
 
 pub struct Application {
     port: u16,
@@ -118,6 +120,8 @@ pub fn run(
             .route("/subscriptions", web::post().to(subscribe))
             .route("/subscriptions/confirm", web::get().to(subscribe_confirm))
             .route("/newsletters", web::post().to(publish_newsletter))
+            .route("/home", web::get().to(home))
+            .route("/login", web::get().to(login_form))
             .app_data(connection_pool.clone())
             .app_data(email_client.clone())
             .app_data(base_url.clone())
