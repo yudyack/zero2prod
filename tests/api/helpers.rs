@@ -5,9 +5,10 @@ use once_cell::sync::Lazy;
 use serde_json::Value;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 
+use tokio::runtime::Handle;
 use uuid::Uuid;
 use wiremock::MockServer;
-use zero2prod::configuration::{get_configuration, DatabaseSettings};
+use zero2prod::configuration::{get_configuration, DatabaseSettings, Settings};
 
 use zero2prod::startup::{get_connection_pool, Application};
 use zero2prod::telemetry::{
@@ -56,6 +57,7 @@ pub struct TestApp {
     pub db_pool: PgPool,
     pub email_server: MockServer,
     pub test_user: TestUser,
+    config: Settings,
 }
 
 pub struct ConfirmationLinks {
@@ -122,6 +124,27 @@ impl TestApp {
     }
 }
 
+impl Drop for TestApp {
+    fn drop(&mut self) {
+        let handle = Handle::current();
+        let connection = self.config.database.without_db();
+        let db_name = self.config.database.database_name;
+        handle.spawn(async move {
+            self.db_pool.close().await;
+
+            PgConnection::connect_with(&connection)
+                .await
+                .expect("Failed to connect to Postgres")
+                .execute(
+                    format!(r#"DROP DATABASE IF EXIST "{}";"#, db_name)
+                        .as_str(),
+                )
+                .await
+                .expect("Failed to drop database");
+        });
+    }
+}
+
 pub async fn spawn_app() -> TestApp {
     dotenv().ok();
     // The first time `initialize` is invoked the code in `TRACING` is executed.
@@ -160,6 +183,7 @@ pub async fn spawn_app() -> TestApp {
         db_pool: get_connection_pool(&configuration.database),
         email_server,
         test_user: TestUser::generate(),
+        config: configuration,
     };
     test_app.test_user.store(&test_app.db_pool).await;
     test_app
