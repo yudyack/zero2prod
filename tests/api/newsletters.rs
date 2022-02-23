@@ -200,7 +200,7 @@ async fn invalid_password_is_rejected() {
     // Arrange
     let app = spawn_app().await;
     // Random credentials
-    let username = app.test_user.username;
+    let username = &app.test_user.username;
     let password = Uuid::new_v4().to_string();
     assert_ne!(app.test_user.password, password);
 
