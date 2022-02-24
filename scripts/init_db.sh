@@ -29,18 +29,19 @@ DB_PORT="${POSTGRES_PORT:=5432}"
 if [[ -z "${SKIP_DOCKER}" ]]; then
 
     if docker ps -a | grep pgdb; then
-        docker start pgdb
-    else
-        # Launch postgres using Docker
-        docker run \
-            -e POSTGRES_USER=${DB_USER} \
-            -e POSTGRES_PASSWORD=${DB_PASSWORD} \
-            -e POSTGRES_DB=${DB_NAME} \
-            -p "${DB_PORT}":5432 \
-            --name pgdb \
-            -d postgres \
-            postgres -N 1000
+        docker stop pgdb
+        docker rm pgdb
     fi
+
+    # Launch postgres using Docker
+    docker run \
+        -e POSTGRES_USER=${DB_USER} \
+        -e POSTGRES_PASSWORD=${DB_PASSWORD} \
+        -e POSTGRES_DB=${DB_NAME} \
+        -p "${DB_PORT}":5432 \
+        --name pgdb \
+        -d postgres \
+        postgres -N 1000
 fi
 # ^ Increased maximum number of connections for testing purposes
 # -p hostport:containerport -> mapping container port to the host
