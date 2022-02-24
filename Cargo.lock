@@ -2994,6 +2994,7 @@ dependencies = [
  "dotenv",
  "env_logger 0.9.0",
  "fake",
+ "hex",
  "hmac 0.12.1",
  "htmlescape",
  "linkify",

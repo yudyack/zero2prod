@@ -3,6 +3,7 @@ use actix_web::web;
 use actix_web::web::Data;
 use actix_web::App;
 use actix_web::HttpServer;
+use secrecy::Secret;
 use sqlx::migrate::MigrateError;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
@@ -65,6 +66,7 @@ impl Application {
             connection_pool,
             email_client,
             configuration.application.base_url,
+            configuration.application.hmac_secret,
         )?;
         Ok(Self { port, server })
     }
@@ -109,6 +111,7 @@ pub fn run(
     connection_pool: PgPool,
     email_client: EmailClient,
     base_url: String,
+    hmac_secret: Secret<String>,
 ) -> Result<Server, std::io::Error> {
     let connection_pool = web::Data::new(connection_pool);
     let email_client = Data::new(email_client);
@@ -127,9 +130,14 @@ pub fn run(
             .app_data(connection_pool.clone())
             .app_data(email_client.clone())
             .app_data(base_url.clone())
+            .app_data(Data::new(HmacSecret(hmac_secret.clone())))
+            // .app_data(Data::new(hmac_secret.clone()))
     })
     .listen(listener)?
     .run();
     // No .await here
     Ok(server)
 }
+
+#[derive(Clone)]
+pub struct HmacSecret(pub Secret<String>);
