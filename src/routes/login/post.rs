@@ -1,7 +1,7 @@
 use actix_web::error::InternalError;
 use actix_web::http::header::LOCATION;
-use actix_web::http::StatusCode;
-use actix_web::{web, HttpResponse, ResponseError};
+
+use actix_web::{web, HttpResponse};
 use hmac::{Hmac, Mac};
 use secrecy::{ExposeSecret, Secret};
 use serde::Deserialize;

@@ -16,12 +16,12 @@ use crate::configuration::DatabaseSettings;
 use crate::configuration::Settings;
 use crate::email_client::EmailClient;
 use crate::routes::health_check;
+use crate::routes::home;
 use crate::routes::login;
 use crate::routes::login_form;
 use crate::routes::publish_newsletter;
 use crate::routes::subscribe;
 use crate::routes::subscribe_confirm;
-use crate::routes::home;
 
 pub struct Application {
     port: u16,
@@ -131,7 +131,7 @@ pub fn run(
             .app_data(email_client.clone())
             .app_data(base_url.clone())
             .app_data(Data::new(HmacSecret(hmac_secret.clone())))
-            // .app_data(Data::new(hmac_secret.clone()))
+        // .app_data(Data::new(hmac_secret.clone()))
     })
     .listen(listener)?
     .run();

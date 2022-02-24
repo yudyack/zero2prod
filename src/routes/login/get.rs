@@ -1,7 +1,6 @@
 use actix_web::{http::header::ContentType, web, HttpResponse};
 use hmac::{Hmac, Mac};
 use secrecy::ExposeSecret;
-use serde::Deserialize;
 
 use crate::startup::HmacSecret;
 
@@ -15,19 +14,20 @@ impl QueryParams {
     fn verify(self, secret: &HmacSecret) -> Result<String, anyhow::Error> {
         if let QueryParams {
             error: Some(error),
-            tag: Some(tag)
-        } = self {
+            tag: Some(tag),
+        } = self
+        {
             let tag = hex::decode(&tag)?;
             let query_string =
                 format!("error={}", urlencoding::Encoded::new(&error));
-    
+
             let mut mac = Hmac::<sha2::Sha256>::new_from_slice(
                 secret.0.expose_secret().as_bytes(),
             )
             .unwrap();
             mac.update(query_string.as_bytes());
             mac.verify_slice(&tag)?;
-    
+
             Ok(error)
         } else {
             Err(anyhow::anyhow!("invalid query params"))

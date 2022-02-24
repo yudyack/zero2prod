@@ -2,15 +2,14 @@ use actix_web::http::header::{self, HeaderMap, HeaderValue};
 use actix_web::http::StatusCode;
 use actix_web::{web, HttpResponse, ResponseError};
 use anyhow::Context;
-use argon2::{Argon2, PasswordHash, PasswordVerifier};
-use secrecy::{ExposeSecret, Secret};
+
+use secrecy::Secret;
 use sqlx::PgPool;
 
-use crate::authentication::{AuthError, validate_credentials, Credentials};
+use crate::authentication::{validate_credentials, AuthError, Credentials};
 use crate::domain::SubscriberEmail;
 use crate::email_client::EmailClient;
 use crate::routes::error_chain_fmt;
-use crate::telemetry::spawn_blocking_with_tracing;
 
 #[derive(thiserror::Error)]
 pub enum PublishError {
@@ -47,10 +46,6 @@ impl ResponseError for PublishError {
         }
     }
 }
-
-
-
-
 
 #[tracing::instrument(
     name = "Publish a newsletter issue."
