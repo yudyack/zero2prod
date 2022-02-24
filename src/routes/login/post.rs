@@ -5,7 +5,7 @@ use secrecy::Secret;
 use serde::Deserialize;
 use sqlx::PgPool;
 
-use crate::authentication::{validate_credentials, Credentials, AuthError};
+use crate::authentication::{validate_credentials, AuthError, Credentials};
 use crate::routes::error_chain_fmt;
 
 #[derive(Deserialize)]
@@ -52,7 +52,7 @@ pub async fn login(
 pub enum LoginError {
     #[error("Authentication failed.")]
     AuthError(#[source] anyhow::Error),
-    #[error(transparent)]
+    #[error("Something went wrong")]
     UnexpectedError(#[from] anyhow::Error),
 }
 
@@ -63,6 +63,16 @@ impl std::fmt::Debug for LoginError {
 }
 
 impl ResponseError for LoginError {
+    fn error_response(&self) -> HttpResponse {
+        let encoded_error = urlencoding::Encoded::new(self.to_string());
+        HttpResponse::build(self.status_code())
+            .insert_header((
+                LOCATION,
+                format!("/login?error={}", encoded_error),
+            ))
+            .finish()
+    }
+
     fn status_code(&self) -> StatusCode {
         match self {
             LoginError::UnexpectedError(_) => StatusCode::INTERNAL_SERVER_ERROR,
