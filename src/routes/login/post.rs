@@ -1,8 +1,9 @@
-use actix_web::cookie::Cookie;
+
 use actix_web::error::InternalError;
 use actix_web::http::header::LOCATION;
 
 use actix_web::{web, HttpResponse};
+use actix_web_flash_messages::FlashMessage;
 use secrecy::Secret;
 use serde::Deserialize;
 use sqlx::PgPool;
@@ -51,10 +52,10 @@ pub async fn login(
                     LoginError::UnexpectedError(e.into())
                 }
             };
+            FlashMessage::error(e.to_string()).send();
 
             let response = HttpResponse::SeeOther()
                 .insert_header((LOCATION, "/login".to_string()))
-                .cookie(Cookie::new("_flash", e.to_string()))
                 .finish();
 
             Err(InternalError::from_response(e, response))
