@@ -1,6 +1,6 @@
 use actix_web::http::header::{self, HeaderMap, HeaderValue};
 use actix_web::http::StatusCode;
-use actix_web::{web, HttpResponse, ResponseError};
+use actix_web::{web, HttpRequest, HttpResponse, ResponseError};
 use anyhow::Context;
 
 use secrecy::Secret;
@@ -57,7 +57,7 @@ pub async fn publish_newsletter(
     pool: web::Data<PgPool>,
     email_client: web::Data<EmailClient>,
     // new extractors
-    request: web::HttpRequest,
+    request: HttpRequest,
 ) -> Result<HttpResponse, PublishError> {
     let credentials = basic_authentication(request.headers())
         .map_err(PublishError::AuthError)?;

@@ -1,4 +1,3 @@
-
 use actix_web::error::InternalError;
 use actix_web::http::header::LOCATION;
 
