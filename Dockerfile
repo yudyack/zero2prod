@@ -23,6 +23,7 @@ RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
 ENV SQLX_OFFLINE true
 # build out project
+COPY migrations migrations
 RUN cargo build --release --bin zero2prod
 
 # runtime stage
