@@ -121,8 +121,8 @@ dependencies = [
 
 [[package]]
 name = "actix-session"
-version = "0.5.0-beta.8"
-source = "git+https://github.com/LukeMathWalker/actix-extras?branch=rework-actix-session#64ea102a8bd3e779f46d3e89753efcba4d743774"
+version = "0.5.0"
+source = "git+https://github.com/LukeMathWalker/actix-extras?branch=rework-actix-session#3fdf40d30b9a217ca54d3f5b6ea302f63f74a709"
 dependencies = [
  "actix-service",
  "actix-utils",
@@ -130,7 +130,6 @@ dependencies = [
  "anyhow",
  "async-trait",
  "derive_more",
- "futures-util",
  "rand 0.8.5",
  "redis",
  "serde 1.0.136",
