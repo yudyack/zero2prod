@@ -5,5 +5,5 @@ database:
   require_ssl: true
 
 email_client:
-  base_url: "https://api.postmarkapp.com/email"
+  base_url: "https://api.postmarkapp.com"
   sender_email: "yudhya.wicaksono@delameta.com"

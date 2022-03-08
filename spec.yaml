@@ -60,7 +60,7 @@ services:
       value: ${newsletter.DATABASE}
     - key: APP_DATABASE__MIGRATE
       scope: RUN_TIME
-      value: true
+      value: "1"
       
 databases:
   # PG = Postgres
