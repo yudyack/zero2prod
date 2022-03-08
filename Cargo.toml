@@ -28,7 +28,6 @@ tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
 tracing-bunyan-formatter = "0.3" # library from writer to enable layer inheritance
 tracing-log = "0.1" # register log implementation to redirect logs into tracing subscriber
 tracing-actix-web = "0.5" # for lib TracingLogger
-dotenv = "0.15"
 secrecy = { version = "0.8", features = ["serde"] }
 serde-aux = "3.0.1"
 unicode-segmentation = "1"
@@ -78,4 +77,6 @@ quickcheck_macros = "0.9.1"
 wiremock = "0.5.10"
 linkify = "0.8"
 claim = "0.5"
+dotenv = "0.15"
+
 
