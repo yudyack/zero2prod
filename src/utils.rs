@@ -1,4 +1,3 @@
-
 use actix_web::http::header::LOCATION;
 use actix_web::HttpResponse;
 

@@ -4,9 +4,10 @@ use secrecy::{ExposeSecret, Secret};
 use sqlx::PgPool;
 
 use crate::{
+    authentication::{validate_credentials, AuthError, Credentials},
     routes::admin::dashboard::get_username,
     session_state::TypedSession,
-    utils::{e500, see_other}, authentication::{validate_credentials, AuthError, Credentials},
+    utils::{e500, see_other},
 };
 
 #[derive(serde::Deserialize)]
@@ -48,11 +49,18 @@ pub async fn change_password(
     if let Err(e) = validate_credentials(credentials, &pool).await {
         return match e {
             AuthError::InvalidCredentials(_) => {
-                FlashMessage::error("You entered an invalid current password.").send();
+                FlashMessage::error("The current password is incorrect.")
+                    .send();
                 Ok(see_other("/admin/password"))
             }
             AuthError::UnexpectedError(_) => Err(e500(e).into()),
-        }
+        };
     }
-    todo!();
+
+    crate::authentication::change_password(user_id, form.0.new_password, &pool)
+        .await
+        .map_err(e500)?;
+
+    FlashMessage::error("The current password has been changed.").send();
+    Ok(see_other("/admin/password"))
 }
