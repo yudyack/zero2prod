@@ -1,5 +1,5 @@
-FROM lukemathwalker/cargo-chef:latest as chef
-WORKDIR /app
+FROM lukemathwalker/cargo-chef:latest-rust-slim-bullseye as chef
+
 # Install OpenSSL - it is dynamically linked by some of our dependencies
 RUN apt-get update -y \
     && apt-get install -y pkg-config libssl-dev \
@@ -10,17 +10,18 @@ RUN apt-get update -y \
 
 RUN git clone https://github.com/rui314/mold.git -b v1.1.1
 RUN make -C mold -j$(nproc) CXX=clang++
-RUN make -C mold install
-
+WORKDIR /app
 FROM chef as planner
 COPY . .
 # Compute a lock-like file for our project
-RUN cargo chef prepare --recipe-path recipe.json
+COPY --from=chef /mold/mold /usr/bin/mold
+COPY --from=chef /mold/mold-wrapper.so /usr/bin/mold-wrapper.so
+RUN mold --run cargo chef prepare --recipe-path recipe.json
 
 # We use the latest Rust stable release as base image
 FROM chef AS builder
-COPY --from=mold /mold/mold /usr/bin/mold
-COPY --from=mold /mold/mold-wrapper.so /usr/bin/mold-wrapper.so
+COPY --from=chef /mold/mold /usr/bin/mold
+COPY --from=chef /mold/mold-wrapper.so /usr/bin/mold-wrapper.so
 COPY --from=planner /app/recipe.json recipe.json
 # Build our project dependencies, not our application!
 RUN mold --run cargo chef cook --release --recipe-path recipe.json
@@ -31,8 +32,8 @@ ENV SQLX_OFFLINE true
 # build out project
 COPY migrations migrations
 
-COPY --from=mold /mold/mold /usr/bin/mold
-COPY --from=mold /mold/mold-wrapper.so /usr/bin/mold-wrapper.so
+COPY --from=chef /mold/mold /usr/bin/mold
+COPY --from=chef /mold/mold-wrapper.so /usr/bin/mold-wrapper.so
 
 RUN mold --run cargo build --release --bin zero2prod
 
