@@ -6,6 +6,7 @@ RUN apt-get update -y \
     # Clean up
     && apt-get autoremove -y \
     && apt-get clean -y \
+    && apt install lld clang \
     && rm -rf /var/lib/apt/lists/*
 
 FROM chef as planner
@@ -27,7 +28,7 @@ COPY migrations migrations
 RUN cargo build --release --bin zero2prod
 
 # runtime stage
-FROM ubuntu:20.04 AS runtime
+FROM debian:bullseye-slim AS runtime
 
 WORKDIR /app
 # Install OpenSSL - it is dynamically linked by some of our dependencies
