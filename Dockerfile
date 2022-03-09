@@ -2,7 +2,7 @@ FROM lukemathwalker/cargo-chef:latest as chef
 WORKDIR /app
 # Install OpenSSL - it is dynamically linked by some of our dependencies
 RUN apt-get update -y \
-    && apt-get install -y pkg-config libssl-dev \
+    && apt-get install -y pkg-config libssl-dev
 
 FROM chef as planner
 COPY . .
