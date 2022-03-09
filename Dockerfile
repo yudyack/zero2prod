@@ -6,7 +6,7 @@ RUN apt-get update -y \
     # Clean up
     && apt-get autoremove -y \
     && apt-get clean -y \
-    && apt install lld clang \
+    && apt install lld clang -y\
     && rm -rf /var/lib/apt/lists/*
 
 FROM chef as planner
