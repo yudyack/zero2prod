@@ -49,7 +49,7 @@ pub async fn change_password_form(
                 <input
                     type="password"
                     placeholder="Confirm new password"
-                    name="confirm_new_password">
+                    name="new_password_check">
             </label>
             <br>
             <button type="submit">Change password</button>
