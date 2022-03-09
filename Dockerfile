@@ -3,7 +3,6 @@ WORKDIR /app
 # Install OpenSSL - it is dynamically linked by some of our dependencies
 RUN apt-get update -y \
     && apt-get install -y pkg-config libssl-dev \
-    && apt install lld clang -y\
 
 FROM chef as planner
 COPY . .
