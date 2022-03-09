@@ -1,4 +1,4 @@
-FROM lukemathwalker/cargo-chef:latest-rust-1.56.0 as chef
+FROM lukemathwalker/cargo-chef:latest as chef
 WORKDIR /app
 # Install OpenSSL - it is dynamically linked by some of our dependencies
 RUN apt-get update -y \
