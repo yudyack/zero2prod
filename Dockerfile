@@ -4,9 +4,6 @@ WORKDIR /app
 RUN apt-get update -y \
     && apt-get install -y pkg-config libssl-dev \
     && apt install lld clang -y\
-    # Clean up
-    && apt-get autoremove -y \
-    && apt-get clean -y \
 
 FROM chef as planner
 COPY . .
