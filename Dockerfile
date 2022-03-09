@@ -27,7 +27,7 @@ COPY migrations migrations
 RUN cargo build --release --bin zero2prod
 
 # runtime stage
-FROM debian:bullseye-slim AS runtime
+FROM ubuntu:20.04 AS runtime
 
 WORKDIR /app
 # Install OpenSSL - it is dynamically linked by some of our dependencies
