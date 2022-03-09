@@ -61,6 +61,12 @@ services:
     - key: APP_DATABASE__MIGRATE
       scope: RUN_TIME
       value: "1"
+    - key: APP_EMAIL_CLIENT__AUTHORIZATION_TOKEN
+      scope: RUN_TIME
+      value: "put token here"
+    - key: APP_REDIS_URI
+      scope: RUN_TIME
+      value: "put token here"
       
 databases:
   # PG = Postgres
