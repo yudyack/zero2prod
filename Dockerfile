@@ -1,13 +1,12 @@
-FROM lukemathwalker/cargo-chef:latest-rust-slim as chef
+FROM lukemathwalker/cargo-chef:latest-rust-1.56.0 as chef
 WORKDIR /app
 # Install OpenSSL - it is dynamically linked by some of our dependencies
 RUN apt-get update -y \
     && apt-get install -y pkg-config libssl-dev \
+    && apt install lld clang -y\
     # Clean up
     && apt-get autoremove -y \
     && apt-get clean -y \
-    && apt install lld clang -y\
-    && rm -rf /var/lib/apt/lists/*
 
 FROM chef as planner
 COPY . .
