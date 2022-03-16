@@ -21,15 +21,15 @@ use tracing_actix_web::TracingLogger;
 use crate::configuration::DatabaseSettings;
 use crate::configuration::Settings;
 use crate::email_client::EmailClient;
-use crate::routes::admin_dashboard;
-use crate::routes::change_password;
-use crate::routes::change_password_form;
+use crate::routes::admin::admin_dashboard;
+use crate::routes::admin::change_password;
+use crate::routes::admin::change_password_form;
+use crate::routes::admin::log_out;
+use crate::routes::admin::publish_newsletter;
 use crate::routes::health_check;
-use crate::routes::home;
-use crate::routes::log_out;
-use crate::routes::login;
-use crate::routes::login_form;
-use crate::routes::publish_newsletter;
+use crate::routes::home::home;
+use crate::routes::login::login;
+use crate::routes::login::login_form;
 use crate::routes::subscribe;
 use crate::routes::subscribe_confirm;
 
@@ -157,7 +157,6 @@ pub async fn run(
             .app_data(email_client.clone())
             .app_data(base_url.clone())
             .app_data(Data::new(HmacSecret(hmac_secret.clone())))
-        // .app_data(Data::new(hmac_secret.clone()))
     })
     .listen(listener)?
     .run();
