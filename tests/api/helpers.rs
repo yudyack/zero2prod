@@ -169,7 +169,7 @@ impl TestApp {
         body: &serde_json::Value,
     ) -> reqwest::Response {
         self.api_client
-            .post(&format!("{}/newsletters", &self.address))
+            .post(&format!("{}/admin/newsletters", &self.address))
             // No longer randomly  generated on the spot
             .basic_auth(
                 &self.test_user.username,
