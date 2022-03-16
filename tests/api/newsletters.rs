@@ -1,8 +1,23 @@
 use crate::helpers::{spawn_app, ConfirmationLinks, TestApp};
 
+use serde::Serialize;
 use uuid::Uuid;
 use wiremock::matchers::{any, method, path};
 use wiremock::{Mock, ResponseTemplate};
+use zero2prod::routes::admin::newsletters::FormData;
+
+#[tokio::test]
+async fn you_must_be_logged_in_to_see_newsletters_form() {
+    // Arrange
+    let app = spawn_app().await;
+
+    // Act
+    let response = app.get_newsletters().await;
+
+    // Assert
+    assert_eq!(response.status().as_u16(), 303);
+    assert_eq!(response.headers().get("Location").unwrap(), "/login");
+}
 
 #[tokio::test]
 async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
@@ -19,13 +34,11 @@ async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
     // Act
     // A sketch of the newsletter payload structure.
     // We might change it later on.
-    let newsletter_request_body = serde_json::json! ({
-        "title": "Newsletter title",
-        "content": {
-        "text": "Newsletter body as plain text",
-        "html": "<p>Newsletter body as HTML</p>",
-        }
-    });
+    let newsletter_request_body = FormData {
+        title: "Newsletter title".to_string(),
+        text_content: "Newsletter body as plain text".to_string(),
+        html_content: "<p>Newsletter body as HTML</p>".to_string(),
+    };
 
     let response = app.post_newsletters(&newsletter_request_body).await;
 
@@ -89,13 +102,11 @@ async fn newsletters_are_delivered_to_confirmed_subscribers() {
         .await;
 
     // Act
-    let newsletter_request_body = serde_json::json! ({
-        "title": "Newsletter title",
-        "content": {
-            "text": "Newsletter body as plain text",
-            "html": "<p>Newsletter body as HTML</p>",
-        }
-    });
+    let newsletter_request_body = FormData {
+        title: "Newsletter title".to_string(),
+        text_content: "Newsletter body as plain text".to_string(),
+        html_content: "<p>Newsletter body as HTML</p>".to_string(),
+    };
 
     let response = app.post_newsletters(&newsletter_request_body).await;
 
@@ -106,22 +117,34 @@ async fn newsletters_are_delivered_to_confirmed_subscribers() {
 
 #[tokio::test]
 async fn newsletters_returns_400_for_invalid_data() {
+    #[derive(Serialize)]
+    struct NoTitle {
+        text_content: String,
+        html_content: String,
+    }
+    #[derive(Serialize)]
+    struct NoContent {
+        title: String,
+    }
+
     // Arrange
     let app = spawn_app().await;
-    let test_cases = vec![
+    let test_cases: Vec<(Box<dyn erased_serde::Serialize>, &str)> = vec![
         (
-            serde_json::json!({
-                "content" : {
-                    "text" : "Newsletter body as plain text",
-                    "html" : "<p>Newsletter body as HTML</p>"
-                }
-            }),
+            {
+                Box::new(NoTitle {
+                    text_content: "Newsletter body as plain text".to_string(),
+                    html_content: "<p>Newsletter body as HTML</p>".to_string(),
+                })
+            },
             "missing title",
         ),
         (
-            serde_json::json!({
-                "title": "Newsletter title"
-            }),
+            {
+                Box::new(NoContent {
+                    title: "Newsletter title".to_string(),
+                })
+            },
             "missing content",
         ),
     ];
@@ -146,13 +169,11 @@ async fn requests_missing_authorization_are_rejected() {
 
     let response = reqwest::Client::new()
         .post(&format!("{}/admin/newsletters", &app.address))
-        .json(&serde_json::json!({
-            "title": "Newsletter title",
-            "content": {
-                "text": "Newsletter body as plain text",
-                "html": "<p>Newsletter body as HTML</p>",
-            }
-        }))
+        .form(&FormData {
+            title: "Newsletter title".to_string(),
+            text_content: "Newsletter body as plain text".to_string(),
+            html_content: "<p>Newsletter body as HTML</p>".to_string(),
+        })
         .send()
         .await
         .expect("Failed execute request.");
@@ -176,13 +197,11 @@ async fn non_existing_user_is_rejected() {
     let respone = reqwest::Client::new()
         .post(&format!("{}/admin/newsletters", &app.address))
         .basic_auth(username, Some(password))
-        .json(&serde_json::json!({
-            "title": "Newsletter title",
-            "content": {
-                "text": "Newsletter body as plain text",
-                "html": "<p>Newsletter body as HTML</p>",
-            }
-        }))
+        .form(&FormData {
+            title: "Newsletter title".to_string(),
+            text_content: "Newsletter body as plain text".to_string(),
+            html_content: "<p>Newsletter body as HTML</p>".to_string(),
+        })
         .send()
         .await
         .expect("Failed execute request.");
@@ -207,13 +226,11 @@ async fn invalid_password_is_rejected() {
     let respone = reqwest::Client::new()
         .post(&format!("{}/admin/newsletters", &app.address))
         .basic_auth(username, Some(password))
-        .json(&serde_json::json!({
-            "title": "Newsletter title",
-            "content": {
-                "text": "Newsletter body as plain text",
-                "html": "<p>Newsletter body as HTML</p>",
-            }
-        }))
+        .form(&FormData {
+            title: "Newsletter title".to_string(),
+            text_content: "Newsletter body as plain text".to_string(),
+            html_content: "<p>Newsletter body as HTML</p>".to_string(),
+        })
         .send()
         .await
         .expect("Failed execute request.");

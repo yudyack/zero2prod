@@ -53,7 +53,7 @@ impl ResponseError for PublishError {
     fields(username=tracing::field::Empty, user_id=tracing::field::Empty)
 )]
 pub async fn publish_newsletter(
-    body: web::Json<BodyData>,
+    body: web::Form<FormData>,
     pool: web::Data<PgPool>,
     email_client: web::Data<EmailClient>,
     // new extractors
@@ -85,8 +85,8 @@ pub async fn publish_newsletter(
                     .send_email(
                         &subscriber.email,
                         &body.title,
-                        &body.content.html,
-                        &body.content.text,
+                        &body.html_content,
+                        &body.text_content,
                     )
                     .await
                     .with_context(|| {
@@ -155,16 +155,11 @@ fn basic_authentication(
     })
 }
 
-#[derive(serde::Deserialize)]
-pub struct BodyData {
-    title: String,
-    content: Content,
-}
-
-#[derive(serde::Deserialize)]
-pub struct Content {
-    html: String,
-    text: String,
+#[derive(serde::Deserialize, serde::Serialize)]
+pub struct FormData {
+    pub title: String,
+    pub html_content: String,
+    pub text_content: String,
 }
 
 pub struct ConfirmedSubscriber {

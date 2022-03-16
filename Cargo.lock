@@ -891,6 +891,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "erased-serde"
+version = "0.3.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2df1bebfbf6d5e523e871439e5bd41d80a617b5a796cca0d616b9b30edf3c04d"
+dependencies = [
+ "serde 1.0.136",
+]
+
+[[package]]
 name = "event-listener"
 version = "2.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3443,6 +3452,7 @@ dependencies = [
  "config",
  "dotenv",
  "env_logger 0.9.0",
+ "erased-serde",
  "fake",
  "hex",
  "hmac 0.12.1",

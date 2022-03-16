@@ -69,7 +69,7 @@ async fn new_password_fields_must_match() {
     let html_page = response.text().await.unwrap();
     assert!(html_page.contains(
         "<p><i>You entered two different new passwords - \
-        the field vallues must match.</i></p>"
+        the field values must match.</i></p>"
     ));
 }
 

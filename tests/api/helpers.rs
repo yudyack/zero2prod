@@ -65,6 +65,30 @@ pub struct ConfirmationLinks {
 }
 
 impl TestApp {
+    pub async fn post_newsletters<Body>(&self, body: &Body) -> reqwest::Response
+    where
+        Body: serde::Serialize + ?Sized,
+    {
+        self.api_client
+            .post(&format!("{}/admin/newsletters", &self.address))
+            .basic_auth(
+                &self.test_user.username,
+                Some(&self.test_user.password),
+            )
+            .form(body)
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
+    pub async fn get_newsletters(&self) -> reqwest::Response {
+        self.api_client
+            .get(&format!("{}/admin/newsletters", &self.address))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
     pub async fn post_logout(&self) -> reqwest::Response {
         self.api_client
             .post(&format!("{}/admin/logout", &self.address))
@@ -164,22 +188,6 @@ impl TestApp {
         ConfirmationLinks { html, plain_text }
     }
 
-    pub async fn post_newsletters(
-        &self,
-        body: &serde_json::Value,
-    ) -> reqwest::Response {
-        self.api_client
-            .post(&format!("{}/admin/newsletters", &self.address))
-            // No longer randomly  generated on the spot
-            .basic_auth(
-                &self.test_user.username,
-                Some(&self.test_user.password),
-            )
-            .json(&body)
-            .send()
-            .await
-            .expect("Failed to execute request.")
-    }
 }
 
 pub async fn spawn_app() -> TestApp {

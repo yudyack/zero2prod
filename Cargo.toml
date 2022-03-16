@@ -78,5 +78,6 @@ wiremock = "0.5.10"
 linkify = "0.8"
 claim = "0.5"
 dotenv = "0.15"
+erased-serde = "0.3"
 
 
