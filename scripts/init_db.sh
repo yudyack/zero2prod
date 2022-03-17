@@ -22,7 +22,7 @@ DB_PASSWORD="${POSTGRES_PASSWORD:=password}"
 # Check if a custom database name has been set, otherwise default to 'newsletter'
 DB_NAME="${POSTGRES_DB:=newslettery}"
 # Check if a custom port has been set, otherwise default to '5432'
-DB_PORT="${POSTGRES_PORT:=5433}"
+DB_PORT="${POSTGRES_PORT:=5432}"
 
 # Allow to skip Docker if a dockerized Postgres database is already running
 
