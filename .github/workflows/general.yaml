@@ -37,7 +37,7 @@ jobs:
           POSTGRES_PASSWORD: password
           POSTGRES_DB: postgres
         ports:
-          - $PG_PORT:5432
+          - "$PG_PORT:5432"
       redis:
         image: redis:6
         ports:
@@ -126,7 +126,7 @@ jobs:
           POSTGRES_PASSWORD: password
           POSTGRES_DB: postgres
         ports:
-          - $PG_PORT:5432
+          - "$PG_PORT:5432"
     env:
       SQLX_VERSION: 0.5.10
       SQLX_FEATURES: postgres
@@ -183,7 +183,7 @@ jobs:
           POSTGRES_PASSWORD: password
           POSTGRES_DB: postgres
         ports:
-          - $PG_PORT:5432
+          - "$PG_PORT:5432"
       redis:
         image: redis:6
         ports:
