@@ -7,10 +7,10 @@ application:
   hmac_secret: "super-long-and-secret-key-needed-to-verify-message-integrity-more-than-64"
 database:
   host: "localhost"
-  port: 5432
+  port: 5433
   username: "postgres"
   password: "password"
-  database_name: "newsletter"
+  database_name: "newslettery"
   migrate: false
 
 email_client:

@@ -1,15 +1,20 @@
 use actix_web::http::header::{self, HeaderMap, HeaderValue};
 use actix_web::http::StatusCode;
+use actix_web::web::ReqData;
 use actix_web::{web, HttpRequest, HttpResponse, ResponseError};
+use actix_web_flash_messages::FlashMessage;
 use anyhow::Context;
 
 use secrecy::Secret;
 use sqlx::PgPool;
 
+use crate::authentication::middleware::UserId;
 use crate::authentication::{validate_credentials, AuthError, Credentials};
 use crate::domain::SubscriberEmail;
 use crate::email_client::EmailClient;
 use crate::routes::error_chain_fmt;
+use crate::session_state::TypedSession;
+use crate::utils::{e500, see_other};
 
 #[derive(thiserror::Error)]
 pub enum PublishError {
@@ -49,44 +54,25 @@ impl ResponseError for PublishError {
 
 #[tracing::instrument(
     name = "Publish a newsletter issue."
-    skip(body, pool, email_client, request),
-    fields(username=tracing::field::Empty, user_id=tracing::field::Empty)
+    skip(form, pool, email_client, user_id),
+    fields(user_id=%*user_id)
 )]
 pub async fn publish_newsletter(
-    body: web::Form<FormData>,
+    form: web::Form<FormData>,
+    user_id: ReqData<UserId>,
     pool: web::Data<PgPool>,
     email_client: web::Data<EmailClient>,
-    // new extractors
-    request: HttpRequest,
-) -> Result<HttpResponse, PublishError> {
-    let credentials = basic_authentication(request.headers())
-        .map_err(PublishError::AuthError)?;
-
-    let _user_id = validate_credentials(credentials, &pool)
-        .await
-        // We match on `AuthError`'s variants, but we pass the **whole** error
-        // into the constructors for `PublishError` variants. This ensures that
-        // the context of the top-level wrapper is preserved when the error is
-        // logged by our middleware.
-        .map_err(|e| match e {
-            AuthError::InvalidCredentials(_) => {
-                PublishError::AuthError(e.into())
-            }
-            AuthError::UnexpectedError(_) => {
-                PublishError::UnexpectedError(e.into())
-            }
-        })?;
-
-    let subscribers = get_confirmed_subscribers(&pool).await?;
+) -> Result<HttpResponse, actix_web::Error> {
+    let subscribers = get_confirmed_subscribers(&pool).await.map_err(e500)?;
     for subscriber in subscribers {
         match subscriber {
             Ok(subscriber) => {
                 email_client
                     .send_email(
                         &subscriber.email,
-                        &body.title,
-                        &body.html_content,
-                        &body.text_content,
+                        &form.title,
+                        &form.html_content,
+                        &form.text_content,
                     )
                     .await
                     .with_context(|| {
@@ -94,21 +80,23 @@ pub async fn publish_newsletter(
                             "failed to send newsletter issue to {}",
                             subscriber.email
                         )
-                    })?;
+                    })
+                    .map_err(e500)?;
             }
             Err(err) => {
                 tracing::warn!(
                     // We record the error chain as a structured field
                     // on the log record
                     err.cause_chain = ?err, // what is this!?
+                    err.message = %err,
                     "Skipping a confirmed subscriber. \
                     Their stored contact is invalid",
                 );
-                return Err(PublishError::UnexpectedError(err));
             }
         }
     }
-    Ok(HttpResponse::Ok().finish())
+    FlashMessage::info("The newsletter issue has been published!").send();
+    Ok(see_other("/admin/newsletters"))
 }
 
 fn basic_authentication(

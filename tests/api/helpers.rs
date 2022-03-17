@@ -89,6 +89,10 @@ impl TestApp {
             .expect("Failed to execute request.")
     }
 
+    pub async fn get_newsletters_html(&self) -> String {
+        self.get_newsletters().await.text().await.unwrap()
+    }
+
     pub async fn post_logout(&self) -> reqwest::Response {
         self.api_client
             .post(&format!("{}/admin/logout", &self.address))
@@ -187,7 +191,6 @@ impl TestApp {
 
         ConfirmationLinks { html, plain_text }
     }
-
 }
 
 pub async fn spawn_app() -> TestApp {
@@ -303,4 +306,17 @@ impl TestUser {
         .await
         .expect("Failed to store test user");
     }
+
+    pub async fn login(&self, app: &TestApp) {
+        app.post_login(&serde_json::json!({
+            "username": &self.username,
+            "password": &self.password
+        }))
+        .await;
+    }
+}
+
+pub fn assert_is_redirect_to(response: &reqwest::Response, location: &str) {
+    assert_eq!(response.status().as_u16(), 303);
+    assert_eq!(response.headers().get("Location").unwrap(), location);
 }
