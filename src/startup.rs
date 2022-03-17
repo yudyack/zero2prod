@@ -153,7 +153,7 @@ pub async fn run(
             .route("/login", web::post().to(login))
             .service(
                 web::scope("/admin")
-                .wrap(from_fn(reject_anonymous_users))
+                    .wrap(from_fn(reject_anonymous_users))
                     .route("/dashboard", web::get().to(admin_dashboard))
                     .route("/password", web::get().to(change_password_form))
                     .route("/password", web::post().to(change_password))

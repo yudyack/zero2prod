@@ -1,8 +1,11 @@
-use actix_web::{HttpResponse, http::header::ContentType};
+use actix_web::{http::header::ContentType, HttpResponse};
 use actix_web_flash_messages::IncomingFlashMessages;
 use std::fmt::Write;
 
-use crate::{session_state::TypedSession, utils::{e500, see_other}};
+use crate::{
+    session_state::TypedSession,
+    utils::{e500, see_other},
+};
 
 pub async fn newsletter_form(
     session: TypedSession,

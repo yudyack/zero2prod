@@ -1,11 +1,10 @@
 use crate::helpers::{spawn_app, ConfirmationLinks, TestApp};
 
-use serde::Serialize;
+use crate::helpers::assert_is_redirect_to;
 use uuid::Uuid;
 use wiremock::matchers::{any, method, path};
 use wiremock::{Mock, ResponseTemplate};
 use zero2prod::routes::admin::newsletters::FormData;
-use crate::helpers::assert_is_redirect_to;
 
 #[tokio::test]
 async fn you_must_be_logged_in_to_see_newsletters_form() {
@@ -33,7 +32,6 @@ async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
         .expect(0)
         .mount(&app.email_server)
         .await;
-
 
     // Act
     // A sketch of the newsletter payload structure.
@@ -127,7 +125,6 @@ async fn newsletters_are_delivered_to_confirmed_subscribers() {
     // Act 2 Follow the redirect
     let html_page = app.get_newsletters_html().await;
     assert!(html_page.contains("The newsletter issue has been published!"))
-
 }
 
 #[tokio::test]
@@ -194,7 +191,6 @@ async fn you_must_be_logged_in_to_go_to_dashboard() {
     // Act
     let response = app.get_admin_dashboard().await;
     assert_is_redirect_to(&response, "/login");
-
 }
 
 // #[tokio::test]

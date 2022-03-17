@@ -1,19 +1,18 @@
-use actix_web::http::header::{self, HeaderMap, HeaderValue};
+use actix_web::http::header::{self, HeaderValue};
 use actix_web::http::StatusCode;
 use actix_web::web::ReqData;
-use actix_web::{web, HttpRequest, HttpResponse, ResponseError};
+use actix_web::{web, HttpResponse, ResponseError};
 use actix_web_flash_messages::FlashMessage;
 use anyhow::Context;
 
-use secrecy::Secret;
 use sqlx::PgPool;
 
 use crate::authentication::middleware::UserId;
-use crate::authentication::{validate_credentials, AuthError, Credentials};
+
 use crate::domain::SubscriberEmail;
 use crate::email_client::EmailClient;
 use crate::routes::error_chain_fmt;
-use crate::session_state::TypedSession;
+
 use crate::utils::{e500, see_other};
 
 #[derive(thiserror::Error)]
@@ -99,49 +98,49 @@ pub async fn publish_newsletter(
     Ok(see_other("/admin/newsletters"))
 }
 
-fn basic_authentication(
-    headers: &HeaderMap,
-) -> Result<Credentials, anyhow::Error> {
-    // Header value, if present, must be valid UTF8 string
-    let header_value = headers
-        .get("Authorization")
-        .context("The 'Authorization' header was missing")?
-        .to_str()
-        .context("The 'Authorization' header was not a valid UTF8 string.")?;
+// fn basic_authentication(
+//     headers: &HeaderMap,
+// ) -> Result<Credentials, anyhow::Error> {
+//     // Header value, if present, must be valid UTF8 string
+//     let header_value = headers
+//         .get("Authorization")
+//         .context("The 'Authorization' header was missing")?
+//         .to_str()
+//         .context("The 'Authorization' header was not a valid UTF8 string.")?;
 
-    let base64encoded_segment = header_value
-        .strip_prefix("Basic ")
-        .context("The authorization scheme was not 'Basic'.")?;
+//     let base64encoded_segment = header_value
+//         .strip_prefix("Basic ")
+//         .context("The authorization scheme was not 'Basic'.")?;
 
-    let decoded_bytes =
-        base64::decode_config(base64encoded_segment, base64::STANDARD)
-            .context("Failed to base64-decode 'Basic' credentials")?;
+//     let decoded_bytes =
+//         base64::decode_config(base64encoded_segment, base64::STANDARD)
+//             .context("Failed to base64-decode 'Basic' credentials")?;
 
-    let decoded_credentials = String::from_utf8(decoded_bytes)
-        .context("The decoded credential string is not valid UTF8")?;
+//     let decoded_credentials = String::from_utf8(decoded_bytes)
+//         .context("The decoded credential string is not valid UTF8")?;
 
-    // split into two segments, using ':' as delimitator
-    let mut credentials = decoded_credentials.splitn(2, ':');
+//     // split into two segments, using ':' as delimitator
+//     let mut credentials = decoded_credentials.splitn(2, ':');
 
-    let username = credentials
-        .next()
-        .ok_or_else(|| {
-            anyhow::anyhow!("A username must be provided in 'Basic' auth.")
-        })?
-        .to_string();
+//     let username = credentials
+//         .next()
+//         .ok_or_else(|| {
+//             anyhow::anyhow!("A username must be provided in 'Basic' auth.")
+//         })?
+//         .to_string();
 
-    let password = credentials
-        .next()
-        .ok_or_else(|| {
-            anyhow::anyhow!("A password must be provided in 'Basic' auth.")
-        })?
-        .to_string();
+//     let password = credentials
+//         .next()
+//         .ok_or_else(|| {
+//             anyhow::anyhow!("A password must be provided in 'Basic' auth.")
+//         })?
+//         .to_string();
 
-    Ok(Credentials {
-        username,
-        password: Secret::new(password),
-    })
-}
+//     Ok(Credentials {
+//         username,
+//         password: Secret::new(password),
+//     })
+// }
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct FormData {

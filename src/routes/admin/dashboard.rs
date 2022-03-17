@@ -1,10 +1,14 @@
-use actix_web::{http::header::ContentType, web::{self, ReqData}, HttpResponse};
+use actix_web::{
+    http::header::ContentType,
+    web::{self, ReqData},
+    HttpResponse,
+};
 use anyhow::Context;
-use reqwest::header::LOCATION;
+
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::{session_state::TypedSession, utils::e500, authentication::middleware::UserId};
+use crate::{authentication::middleware::UserId, utils::e500};
 
 pub async fn admin_dashboard(
     user_id: ReqData<UserId>,
