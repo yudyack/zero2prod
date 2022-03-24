@@ -1,7 +1,7 @@
 use actix_web::http::StatusCode;
 use actix_web::{body::to_bytes, HttpResponse};
-use sqlx::{Postgres, Transaction};
 use sqlx::{postgres::PgHasArrayType, PgPool};
+use sqlx::{Postgres, Transaction};
 use uuid::Uuid;
 
 use super::IdempotencyKey;

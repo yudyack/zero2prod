@@ -12,8 +12,7 @@ use crate::authentication::middleware::UserId;
 use crate::domain::SubscriberEmail;
 use crate::email_client::EmailClient;
 use crate::idempotency::{
-    get_saved_response, save_response, try_processing, IdempotencyKey,
-    NextAction,
+    save_response, try_processing, IdempotencyKey, NextAction,
 };
 use crate::routes::error_chain_fmt;
 
@@ -125,9 +124,10 @@ pub async fn publish_newsletter(
     success_message().send();
     // save the saved response
     let response = see_other("/admin/newsletters");
-    let response = save_response(transaction, &idempotency_key, user_id, response)
-        .await
-        .map_err(e500)?;
+    let response =
+        save_response(transaction, &idempotency_key, user_id, response)
+            .await
+            .map_err(e500)?;
     Ok(response)
 }
 

@@ -236,7 +236,6 @@ async fn newsletter_creation_is_idempotent() {
     // Mock verifies on Drop that we have sent the newsletter email once
 }
 
-
 #[tokio::test]
 async fn concurrent_form_submisison_is_handled_gracefully() {
     //Arrange
@@ -246,7 +245,9 @@ async fn concurrent_form_submisison_is_handled_gracefully() {
 
     Mock::given(path("/email"))
         .and(method("POST"))
-        .respond_with(ResponseTemplate::new(200).set_delay(Duration::from_secs(1)))
+        .respond_with(
+            ResponseTemplate::new(200).set_delay(Duration::from_secs(1)),
+        )
         .expect(1)
         .mount(&app.email_server)
         .await;
@@ -263,7 +264,10 @@ async fn concurrent_form_submisison_is_handled_gracefully() {
     let (response1, response2) = tokio::join!(response1, response2);
 
     assert_eq!(response1.status().as_u16(), response2.status().as_u16());
-    assert_eq!(response1.text().await.unwrap(), response2.text().await.unwrap());
+    assert_eq!(
+        response1.text().await.unwrap(),
+        response2.text().await.unwrap()
+    );
 
     // Mock verifies on Drop that we have sent the newsletter email once
 }
