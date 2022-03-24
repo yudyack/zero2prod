@@ -11,9 +11,10 @@ use crate::authentication::middleware::UserId;
 
 use crate::domain::SubscriberEmail;
 use crate::email_client::EmailClient;
+use crate::idempotency::{get_saved_response, save_response, IdempotencyKey};
 use crate::routes::error_chain_fmt;
 
-use crate::utils::{e500, see_other};
+use crate::utils::{e400, e500, see_other};
 
 #[derive(thiserror::Error)]
 pub enum PublishError {
@@ -62,6 +63,27 @@ pub async fn publish_newsletter(
     pool: web::Data<PgPool>,
     email_client: web::Data<EmailClient>,
 ) -> Result<HttpResponse, actix_web::Error> {
+    let user_id = *user_id.into_inner();
+    // We must destructure the form to avoid upsetting the borrow checker
+    let FormData {
+        title,
+        text_content,
+        html_content,
+        idempotency_key,
+    } = form.into_inner();
+
+    let idempotency_key: IdempotencyKey =
+        idempotency_key.try_into().map_err(e400)?;
+
+    if let Some(saved_response) =
+        get_saved_response(&pool, &idempotency_key, user_id)
+            .await
+            .map_err(e500)?
+    {
+        FlashMessage::info("The newsletter issue has been published!").send();
+        return Ok(saved_response);
+    }
+
     let subscribers = get_confirmed_subscribers(&pool).await.map_err(e500)?;
     for subscriber in subscribers {
         match subscriber {
@@ -69,9 +91,9 @@ pub async fn publish_newsletter(
                 email_client
                     .send_email(
                         &subscriber.email,
-                        &form.title,
-                        &form.html_content,
-                        &form.text_content,
+                        &title,
+                        &html_content,
+                        &text_content,
                     )
                     .await
                     .with_context(|| {
@@ -95,7 +117,13 @@ pub async fn publish_newsletter(
         }
     }
     FlashMessage::info("The newsletter issue has been published!").send();
-    Ok(see_other("/admin/newsletters"))
+
+    // save the saved response
+    let response = see_other("/admin/newsletters");
+    let response = save_response(&pool, &idempotency_key, user_id, response)
+        .await
+        .map_err(e500)?;
+    Ok(response)
 }
 
 // fn basic_authentication(
@@ -147,6 +175,8 @@ pub struct FormData {
     pub title: String,
     pub html_content: String,
     pub text_content: String,
+    // New field
+    pub idempotency_key: String,
 }
 
 pub struct ConfirmedSubscriber {

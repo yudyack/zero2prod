@@ -40,6 +40,7 @@ async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
         title: "Newsletter title".to_string(),
         text_content: "Newsletter body as plain text".to_string(),
         html_content: "<p>Newsletter body as HTML</p>".to_string(),
+        idempotency_key: Uuid::new_v4().to_string(),
     };
 
     let response = app.post_newsletters(&newsletter_request_body).await;
@@ -115,6 +116,7 @@ async fn newsletters_are_delivered_to_confirmed_subscribers() {
         title: "Newsletter title".to_string(),
         text_content: "Newsletter body as plain text".to_string(),
         html_content: "<p>Newsletter body as HTML</p>".to_string(),
+        idempotency_key: Uuid::new_v4().to_string(),
     };
 
     let response = app.post_newsletters(&newsletter_request_body).await;
@@ -166,14 +168,14 @@ async fn newsletters_returns_400_for_invalid_data() {
 async fn you_must_be_logged_in_to_post_newsletter() {
     // Arrange
     let app = spawn_app().await;
-    let new_password = Uuid::new_v4().to_string();
 
     // Act
     let response = app
         .post_newsletters(&serde_json::json!({
-            "current_password" : Uuid::new_v4().to_string(),
-            "new_password" : &new_password,
-            "new_password_check" : &new_password,
+            "title": "Newsletter title",
+            "text_content": "Newsletter body as plain text",
+            "html_content": "<p>Newsletter body as HTML</p>",
+            "idempotency_key": Uuid::new_v4().to_string(),
         }))
         .await;
 
@@ -191,6 +193,45 @@ async fn you_must_be_logged_in_to_go_to_dashboard() {
     // Act
     let response = app.get_admin_dashboard().await;
     assert_is_redirect_to(&response, "/login");
+}
+
+#[tokio::test]
+async fn newsletter_creation_is_idempotent() {
+    //Arrange
+    let app = spawn_app().await;
+    create_confirmed_subscriber(&app).await;
+    app.test_user.login(&app).await;
+
+    Mock::given(path("/email"))
+        .and(method("POST"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(1)
+        .mount(&app.email_server)
+        .await;
+
+    // Act - Part 1 - Submit newsletter form
+    let newsletter_request_body = FormData {
+        title: "Newsletter title".to_string(),
+        text_content: "Newsletter body as plain text".to_string(),
+        html_content: "<p>Newsletter body as HTML</p>".to_string(),
+        idempotency_key: Uuid::new_v4().to_string(),
+    };
+    let response = app.post_newsletters(&newsletter_request_body).await;
+    assert_is_redirect_to(&response, "/admin/newsletters");
+
+    // Act - Part 2 - Follow the redirect
+    let html_page = app.get_newsletters_html().await;
+    assert!(html_page.contains("The newsletter issue has been published!"),);
+
+    // Act - Part 3 - Submt newsletter form again
+    let response = app.post_newsletters(&newsletter_request_body).await;
+    assert_is_redirect_to(&response, "/admin/newsletters");
+
+    // Act - Part 4 - Follow the redirect
+    let html_page = app.get_newsletters_html().await;
+    assert!(html_page.contains("The newsletter issue has been published!"),)
+
+    // Mock verifies on Drop that we have sent the newsletter email once
 }
 
 // #[tokio::test]
