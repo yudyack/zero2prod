@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::helpers::{spawn_app, ConfirmationLinks, TestApp};
 
 use crate::helpers::assert_is_redirect_to;
@@ -230,6 +232,38 @@ async fn newsletter_creation_is_idempotent() {
     // Act - Part 4 - Follow the redirect
     let html_page = app.get_newsletters_html().await;
     assert!(html_page.contains("The newsletter issue has been published!"),)
+
+    // Mock verifies on Drop that we have sent the newsletter email once
+}
+
+
+#[tokio::test]
+async fn concurrent_form_submisison_is_handled_gracefully() {
+    //Arrange
+    let app = spawn_app().await;
+    create_confirmed_subscriber(&app).await;
+    app.test_user.login(&app).await;
+
+    Mock::given(path("/email"))
+        .and(method("POST"))
+        .respond_with(ResponseTemplate::new(200).set_delay(Duration::from_secs(1)))
+        .expect(1)
+        .mount(&app.email_server)
+        .await;
+
+    //  Submit newsletter form concurrently
+    let newsletter_request_body = FormData {
+        title: "Newsletter title".to_string(),
+        text_content: "Newsletter body as plain text".to_string(),
+        html_content: "<p>Newsletter body as HTML</p>".to_string(),
+        idempotency_key: Uuid::new_v4().to_string(),
+    };
+    let response1 = app.post_newsletters(&newsletter_request_body);
+    let response2 = app.post_newsletters(&newsletter_request_body);
+    let (response1, response2) = tokio::join!(response1, response2);
+
+    assert_eq!(response1.status().as_u16(), response2.status().as_u16());
+    assert_eq!(response1.text().await.unwrap(), response2.text().await.unwrap());
 
     // Mock verifies on Drop that we have sent the newsletter email once
 }
