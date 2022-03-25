@@ -59,10 +59,6 @@ where
 ///
 /// It should only be called once!
 pub fn init_subscriber(subscriber: impl Subscriber + Send + Sync) {
-    // env_logger::Builder::from_env(
-    //     env_logger::Env::default().default_filter_or("info"),
-    // )
-    // .init();
     LogTracer::init().expect("Failed to set logger");
     set_global_default(subscriber).expect("Failed to set subscriber");
 }
@@ -75,5 +71,4 @@ where
 {
     let current_span = tracing::Span::current();
     tokio::task::spawn_blocking(move || current_span.in_scope(f))
-    // tokio::task::spawn_blocking(f)
 }

@@ -17,9 +17,6 @@ async fn an_error_flash_message_is_set_on_failure() {
     assert_eq!(response.headers().get("Location").unwrap(), "/login");
 
     // No longer asserting fats related to cookies
-    // let flash_cookie =
-    //     response.cookies().find(|c| c.name() == "_flash").unwrap();
-    // assert_eq!(flash_cookie.value(), "Authentication failed.");
 
     // Act - Part 2 - Follow the redirect
     let response = app.get_login().await;

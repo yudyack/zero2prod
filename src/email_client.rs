@@ -119,7 +119,6 @@ mod tests {
             let result: Result<serde_json::Value, Error> =
                 serde_json::from_slice(&request.body);
             if let Ok(body) = result {
-                // dbg!(&body);
                 // Check that all the mandatory fields are populated
                 // without inspecting the field values
                 body.get("From").is_some()

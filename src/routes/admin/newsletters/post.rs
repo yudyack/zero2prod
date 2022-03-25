@@ -101,38 +101,7 @@ pub async fn publish_newsletter(
         .context("Failed to enqueue delivery tasks")
         .map_err(e500)?;
 
-    // let subscribers = get_confirmed_subscribers(&pool).await.map_err(e500)?;
-    // for subscriber in subscribers {
-    //     match subscriber {
-    //         Ok(subscriber) => {
-    //             email_client
-    //                 .send_email(
-    //                     &subscriber.email,
-    //                     &title,
-    //                     &html_content,
-    //                     &text_content,
-    //                 )
-    //                 .await
-    //                 .with_context(|| {
-    //                     format!(
-    //                         "failed to send newsletter issue to {}",
-    //                         subscriber.email
-    //                     )
-    //                 })
-    //                 .map_err(e500)?;
-    //         }
-    //         Err(err) => {
-    //             tracing::warn!(
-    //                 // We record the error chain as a structured field
-    //                 // on the log record
-    //                 err.cause_chain = ?err, // what is this!?
-    //                 err.message = %err,
-    //                 "Skipping a confirmed subscriber. \
-    //                 Their stored contact is invalid",
-    //             );
-    //         }
-    //     }
-    // }
+    // move send email logic to worker
 
     // save the saved response
     let response = see_other("/admin/newsletters");
@@ -151,49 +120,7 @@ fn success_message() -> FlashMessage {
     )
 }
 
-// fn basic_authentication(
-//     headers: &HeaderMap,
-// ) -> Result<Credentials, anyhow::Error> {
-//     // Header value, if present, must be valid UTF8 string
-//     let header_value = headers
-//         .get("Authorization")
-//         .context("The 'Authorization' header was missing")?
-//         .to_str()
-//         .context("The 'Authorization' header was not a valid UTF8 string.")?;
-
-//     let base64encoded_segment = header_value
-//         .strip_prefix("Basic ")
-//         .context("The authorization scheme was not 'Basic'.")?;
-
-//     let decoded_bytes =
-//         base64::decode_config(base64encoded_segment, base64::STANDARD)
-//             .context("Failed to base64-decode 'Basic' credentials")?;
-
-//     let decoded_credentials = String::from_utf8(decoded_bytes)
-//         .context("The decoded credential string is not valid UTF8")?;
-
-//     // split into two segments, using ':' as delimitator
-//     let mut credentials = decoded_credentials.splitn(2, ':');
-
-//     let username = credentials
-//         .next()
-//         .ok_or_else(|| {
-//             anyhow::anyhow!("A username must be provided in 'Basic' auth.")
-//         })?
-//         .to_string();
-
-//     let password = credentials
-//         .next()
-//         .ok_or_else(|| {
-//             anyhow::anyhow!("A password must be provided in 'Basic' auth.")
-//         })?
-//         .to_string();
-
-//     Ok(Credentials {
-//         username,
-//         password: Secret::new(password),
-//     })
-// }
+// removed basic authentication
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct FormData {
@@ -204,35 +131,7 @@ pub struct FormData {
     pub idempotency_key: String,
 }
 
-// pub struct ConfirmedSubscriber {
-//     email: SubscriberEmail,
-// }
-
-// #[tracing::instrument(name = "Get confirmed subscriber", skip(pool))]
-// pub async fn get_confirmed_subscribers(
-//     pool: &PgPool,
-//     // We are returning a `Vec` of `Result`s in the happy case.
-//     // This allows the caller to bubble up errors due to network issues or other
-//     // transient failures using the `?` operator, while the compiler
-//     // forces them to handle the subtler mapping error.
-//     // See http://sled.rs/errors.html for a deep-dive about this technique.
-// ) -> Result<Vec<Result<ConfirmedSubscriber, anyhow::Error>>, anyhow::Error> {
-//     let confirmed_subscribers = sqlx::query!(
-//         r#"
-//             SELECT email FROM subscriptions
-//             WHERE status = 'confirmed'
-//         "#,
-//     )
-//     .fetch_all(pool)
-//     .await?
-//     .into_iter()
-//     .map(|r| match SubscriberEmail::parse(r.email) {
-//         Ok(email) => Ok(ConfirmedSubscriber { email }),
-//         Err(e) => Err(anyhow::anyhow!(e)),
-//     })
-//     .collect();
-//     Ok(confirmed_subscribers)
-// }
+// confirmed subscriber to worker
 
 #[tracing::instrument(skip_all)]
 async fn insert_newsletter_issue(

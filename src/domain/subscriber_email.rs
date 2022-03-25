@@ -55,11 +55,6 @@ mod tests {
     }
 
     // // We have removed the `assert_ok` import.
-    // #[test]
-    // fn valid_emails_are_parsed_successfully() {
-    //     let email = SafeEmail().fake();
-    //     claim::assert_ok!(SubscriberEmail::parse(email));
-    // }
 
     // Both `Clone` and `Debug` are required by `quickcheck`
     #[derive(Debug, Clone)]
