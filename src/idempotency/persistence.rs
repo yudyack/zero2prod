@@ -7,7 +7,7 @@ use uuid::Uuid;
 use super::IdempotencyKey;
 
 pub enum NextAction {
-    StartProcessing(Transaction<'static, Postgres>),
+    StartProcessing(Box<Transaction<'static, Postgres>>),
     ReturnSavedResponse(HttpResponse),
 }
 
@@ -35,7 +35,7 @@ pub async fn try_processing(
     .rows_affected();
 
     if n_inserted_rows > 0 {
-        Ok(NextAction::StartProcessing(transaction))
+        Ok(NextAction::StartProcessing(Box::new(transaction)))
     } else {
         let saved_response = get_saved_response(pool, idempotency_key, user_id)
             .await?
