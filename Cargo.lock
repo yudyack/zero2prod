@@ -3596,6 +3596,7 @@ dependencies = [
  "serde 1.0.136",
  "serde-aux",
  "serde_json",
+ "serde_urlencoded",
  "sha2 0.10.2",
  "sqlx",
  "thiserror",
